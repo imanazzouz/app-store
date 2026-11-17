@@ -254,6 +254,28 @@ textarea {
   font-size: clamp(1.55rem, 3vw, 2.15rem);
 }
 
+/* ── Preview-environment banner ─────────────────────────────── */
+.demo-banner {
+  background: #fbf1dc;
+  color: #7a5a12;
+  border-bottom: 1px solid #eeddb4;
+  padding: 9px 20px;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.demo-banner strong {
+  color: #5f4708;
+}
+
+.demo-banner code {
+  background: rgba(122, 90, 18, 0.12);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 0.82em;
+}
+
 /* ── Header ─────────────────────────────────────────────────── */
 .site-header {
   position: sticky;

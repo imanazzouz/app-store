@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getSession } from '@/lib/session';
 import { BrandMark } from '@/components/site-header';
 import AdminNav from '@/components/admin-nav';
+import DemoBanner from '@/components/demo-banner';
 import './admin.css';
 
 export const dynamic = 'force-dynamic';
@@ -43,7 +44,10 @@ export default async function AdminLayout({
           </div>
         </div>
       </header>
-      <main className="admin-main">{children}</main>
+      <main className="admin-main">
+        <DemoBanner />
+        {children}
+      </main>
     </div>
   );
 }

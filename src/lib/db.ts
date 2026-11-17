@@ -49,10 +49,16 @@ async function createDriver(): Promise<Db> {
     };
   }
 
-  // ── Embedded Postgres for local development ─────────────────────────
+  // ── Embedded Postgres (development, or Vercel preview before a
+  //    database is attached — /tmp is the only writable directory there).
+  //    Data in preview mode is temporary: attaching Neon (POSTGRES_URL)
+  //    switches the app to persistent storage with zero code changes.
   const { PGlite } = await import('@electric-sql/pglite');
   const dataDir =
-    process.env.PGLITE_DIR || path.join(process.cwd(), '.data', 'pglite');
+    process.env.PGLITE_DIR ||
+    (process.env.VERCEL
+      ? '/tmp/atlas-pglite'
+      : path.join(process.cwd(), '.data', 'pglite'));
   await fs.mkdir(dataDir, { recursive: true });
   const pg = new PGlite(dataDir);
   await pg.waitReady;
@@ -85,6 +91,16 @@ export async function getDb(): Promise<Db> {
     });
   }
   return g.__atlasDbPromise;
+}
+
+/**
+ * True when running on Vercel without an attached database — the app then
+ * falls back to ephemeral storage and the UI shows a visible notice so nobody
+ * mistakes it for a production data store.
+ */
+export function isEphemeralDb(): boolean {
+  const url = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+  return Boolean(process.env.VERCEL) && !url;
 }
 
 /** Convenience wrapper: `const rows = await query<Listing>(...)`. */
