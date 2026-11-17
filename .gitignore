@@ -1,0 +1,25 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# local database
+/.data/
+*.db
+
+# env — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# uploads (dev-only image uploads)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+.vercel
