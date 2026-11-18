@@ -241,4 +241,6 @@ export type PaymentReversalInput=z.infer<typeof paymentReversalSchema>;
 export const reversalDecisionSchema=z.object({decision:z.enum(['approved','rejected']),note:z.string().trim().max(1000).default('')});
 export type ReversalDecisionInput=z.infer<typeof reversalDecisionSchema>;
 export const tenantAuthRequestSchema=z.object({email:z.string().trim().email().max(200)});
+export const tenantRegistrationStartSchema=z.object({email:z.string().trim().email().max(200),legal_name:z.string().trim().min(2).max(160),password:strongPassword});
+export const tenantRegistrationVerifySchema=z.object({email:z.string().trim().email().max(200),code:z.string().regex(/^\d{6}$/,'أدخل رمز التحقق المكوّن من ٦ أرقام.')});
 export const tenantTokenCompletionSchema=z.object({token:z.string().min(40).max(100),password:strongPassword});

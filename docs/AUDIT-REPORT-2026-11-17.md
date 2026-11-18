@@ -40,7 +40,7 @@
 
 ## التحقق المنفذ على الحالة الحالية
 
-- `npm test`: **10/10 ناجحة** على PGlite مؤقت. الاختبارات تغطي صلاحيات سياسة عامة، الدفعات الجزئية والتزامن ومنع زيادة التخصيص، رد منفصل واعتماد غير ذاتي، رصيد الضمان والاقتطاع ومرفقاته، تجديد وتداخل، تنبيهات بلا تكرار، دعوة/استعادة أحادية الاستخدام وانتهاء ومحدد معدل، عزل بيانات بوابة مستأجر، وإنهاء مع تناسب وفواتير تاريخية وأرصدة دائنة.
+- `npm test`: **12/12 ناجحة** على PGlite مؤقت. تشمل صلاحيات الأدوار وفحوص الجلسة الإدارية، حالة OAuth وPKCE، تسجيل المستأجر برمز بريد من 6 أرقام مع انتهاء/استخدام واحد وربط سجل قائم وحماية الحساب المعطّل، الدفعات والضمان والتجديد والتنبيهات والدعوات/الاستعادة والإنهاء.
 - `npm run build`: ناجح، مع تحذيرين فقط على استخدام `<img>` في الصفحة الرئيسية العامة.
 - `npx tsc --noEmit`: ناجح.
 - `npm audit`: صفر ثغرات؛ `git diff --check`: ناجح.
@@ -57,3 +57,10 @@
 6. عند تشغيل البريد: إعداد `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`, و`APP_BASE_URL` عبر بيئة الأسرار خارج Git. `APP_BASE_URL` يجب أن يكون HTTPS في الإنتاج؛ عيّن `CRON_SECRET` لحماية Cron. لا توجد اعتمادات مختلقة أو مضمنة.
 
 لم يتم تنفيذ أي من هذه الخطوات على الإنتاج. لا يُعلن الإطلاق قبل اجتيازها وموافقة المالك والمراجعين المختصين.
+
+## 11. Google tenant sign-in and self-registration
+
+- Added `/portal/register` with mailbox-confirmation OTP (six digits), single-use/expiry/attempt limits, HMAC digest at rest, and DB-backed rate limiting. A verified address attaches to one existing tenant record instead of duplicating it; a new verified address creates a tenant record without a lease. A disabled portal account is not reactivated by registration.
+- Added optional Google OpenID Connect sign-in for tenant portal only, with signed state cookie, nonce, PKCE S256, Google ID-token signature/issuer/audience checks and verified-email requirement. It will create a tenant record when no existing matching record exists. Staff login remains email/password.
+- Added configuration documentation for `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, callback URI, Resend mail provider, and OTP expiry. No OAuth credentials were supplied or added, so live Google consent/callback/token exchange was not exercised; deployment must configure the OAuth client and email provider.
+- PGlite verifies registration-code HMAC/expiry/single-use, safe existing-tenant association, refusal to reactivate disabled accounts, and OAuth state/nonce/PKCE tamper detection. Local HTTP smoke confirmed the registration page/POST flow, Origin rejection, and clear unavailable behavior when Google credentials are absent. No real email was sent.

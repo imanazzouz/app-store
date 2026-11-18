@@ -170,13 +170,26 @@ prices are illustrative demo data, not offers or market valuations.
 
 ### 3.11 بوابة المستأجر
 
-من **Tenants** يرسل المدير دعوة إلى البريد المسجل. لا تعرض الواجهة كلمة مرور
-مؤقتة؛ يتطلب الإرسال مزود بريد مضبوطاً. يفتح المستأجر رابطاً عشوائياً أحادي
-الاستخدام ومنتهي الصلاحية ليختار كلمة المرور بنفسه، ويمكنه طلب إعادة تعيينها من
-`/portal/forgot-password` برسالة عامة لا تكشف وجود الحساب. تعرض البوابة عقود
-المستأجر وفواتيره وإيصالاته وأرصدة دائنة منفصلة، وتسمح بإرسال بلاغ صيانة لوحدة
-مرتبطة بعقد نشط. الروابط السابقة تُبطل عند إصدار رابط جديد. لا يوجد دفع إلكتروني
-أو مقاصة تلقائية للأرصدة الدائنة.
+يمكن للمستأجر إنشاء حساب من `/portal/register` بالاسم والبريد وكلمة المرور، ثم
+تأكيد ملكية البريد برمز من ٦ أرقام ينتهي خلال مدة محددة. إذا طابق البريد سجلاً
+واحداً لمستأجر قائم، يربط الحساب به بعد التحقق ولا ينشئ سجلاً مكرراً؛ أما البريد
+الجديد فينشئ ملف مستأجر بلا عقد إلى أن تربطه الإدارة. لا يسمح التسجيل بإعادة
+تفعيل حساب عطّلته الإدارة. يمكن أيضاً تسجيل الدخول اختيارياً عبر Google بحساب
+بريده مؤكّد، وهو متاح لبوابة المستأجر فقط وليس لحسابات الموظفين.
+
+من **Tenants** يمكن للإدارة إرسال دعوة إلى البريد المسجل؛ لا تعرض الواجهة كلمة
+مرور مؤقتة. تعمل الدعوة ورابط الاستعادة كرموز عشوائية أحادية الاستخدام ومنتهية
+الصلاحية. استعادة كلمة المرور من `/portal/forgot-password` ترسل رابطاً عاماً لا
+يكشف وجود الحساب. تعرض البوابة عقود المستأجر وفواتيره وإيصالاته وأرصدة دائنة
+منفصلة، وتسمح ببلاغ صيانة لوحدة مرتبطة بعقد نشط. لا يوجد دفع إلكتروني أو مقاصة
+تلقائية للأرصدة.
+
+**إعداد البريد:** يلزم `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`,
+و`APP_BASE_URL` عام وآمن (`https` في الإنتاج). رمز التسجيل يضبط عبر
+`TENANT_REGISTRATION_CODE_TTL_MINUTES`. لتفعيل Google، عيّن
+`GOOGLE_CLIENT_ID` و`GOOGLE_CLIENT_SECRET`، وأضف عنوان callback المحدد في README
+إلى Google Cloud Console. الاختبارات تستخدم مزوداً تجريبياً لا يرسل رسائل حقيقية.
+لا تضع بيانات اعتماد البريد أو Google في Git.
 
 ### 3.12 تجديد وإنهاء العقد والضمان
 
@@ -280,8 +293,9 @@ npm run start      # serve production build
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME` | first run | Seeds the initial admin only if no user with that email exists. |
 | `BLOB_READ_WRITE_TOKEN` | optional | Enables photo uploads in production (attach a Blob store). |
 | `NEXT_PUBLIC_SITE_URL` | optional | Canonical URL for sitemap/OG metadata. |
-| `EMAIL_PROVIDER`, `RESEND_API_KEY`, `EMAIL_FROM`, `APP_BASE_URL` | tenant email | Required to send account invitations/resets. Use HTTPS `APP_BASE_URL` in production; no credentials are committed. |
-| `TENANT_INVITE_TTL_MINUTES`, `TENANT_RESET_TTL_MINUTES` | optional | Expiration windows for account invite and password-reset links. |
+| `EMAIL_PROVIDER`, `RESEND_API_KEY`, `EMAIL_FROM`, `APP_BASE_URL` | tenant email | Required to send account invitations, resets and verification codes. Use HTTPS `APP_BASE_URL` in production; no credentials are committed. |
+| `TENANT_INVITE_TTL_MINUTES`, `TENANT_RESET_TTL_MINUTES`, `TENANT_REGISTRATION_CODE_TTL_MINUTES` | optional | Expiration windows for invite/reset links and the six-digit registration code. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | optional | Enables Google OpenID Connect for tenant portal only; configure callback `/api/tenant-auth/google/callback` in Google Cloud Console. |
 | `CRON_SECRET` | Vercel Cron | Protects the scheduled lease reminder endpoint. |
 | `PGSSL_CA` | optional | PEM CA for private PostgreSQL installations; normal TLS certificate verification remains enabled. |
 | `ATLAS_TEST_POSTGRES_URL` | tests only | Disposable PostgreSQL database named with `test` or `ci`; never point to production. |

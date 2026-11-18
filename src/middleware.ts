@@ -1,7 +1,7 @@
 import{NextResponse,type NextRequest}from'next/server';import{jwtVerify}from'jose/jwt/verify';
 export async function middleware(req:NextRequest){const{pathname}=req.nextUrl;const secret=process.env.AUTH_SECRET;
  if(pathname.startsWith('/portal')||pathname.startsWith('/api/tenant/')){
-  if(['/portal/accept-invite','/portal/forgot-password','/portal/reset-password'].includes(pathname))return NextResponse.next();
+  if(['/portal/accept-invite','/portal/forgot-password','/portal/reset-password','/portal/register'].includes(pathname))return NextResponse.next();
   const token=req.cookies.get('atlas_tenant_session')?.value;let payload:Record<string,unknown>|null=null;
   if(token&&secret){try{const verified=await jwtVerify(token,new TextEncoder().encode(secret),{audience:'atlas-tenant-portal'});if(verified.payload.kind==='tenant')payload=verified.payload as Record<string,unknown>}catch{payload=null}}
   if(pathname==='/portal/login'){if(payload)return NextResponse.redirect(new URL(payload.pcr?'/portal/change-password':'/portal',req.url));return NextResponse.next()}

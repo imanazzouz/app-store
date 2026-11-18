@@ -226,7 +226,23 @@ ALTER TABLE tenants ADD COLUMN IF NOT EXISTS portal_password_hash TEXT;
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS portal_active BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS portal_session_version INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS password_change_required BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS portal_email_verified_at TIMESTAMPTZ;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS google_subject TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tenants_google_subject ON tenants(google_subject) WHERE google_subject IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tenants_active_portal_email ON tenants(lower(email)) WHERE portal_active=true AND email<>'';
+CREATE TABLE IF NOT EXISTS tenant_registration_challenges (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL,
+  legal_name TEXT NOT NULL,
+  password_hash TEXT NOT NULL,
+  code_hash CHAR(64) NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts>=0),
+  expires_at TIMESTAMPTZ NOT NULL,
+  consumed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tenant_registration_active_email ON tenant_registration_challenges(lower(email)) WHERE consumed_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_tenant_registration_expiry ON tenant_registration_challenges(expires_at);
 CREATE TABLE IF NOT EXISTS leases (
   id SERIAL PRIMARY KEY,
   lease_number TEXT NOT NULL UNIQUE,

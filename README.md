@@ -25,7 +25,7 @@ application pack. No document uploads exist anywhere in the public flow.
 - Expenses, maintenance issues, vendors and work orders; completed work orders create linked expenses
 - Occupancy, collections and operations reports; admin audit log
 - Role-managed team accounts, configurable invoice/termination policy defaults, contact/exchange settings
-- Tenant portal: tenant-scoped leases/invoices/receipts/credits, one-time email invitations, self-service password reset and maintenance requests
+- Tenant portal: tenant-scoped leases/invoices/receipts/credits, one-time invitations and six-digit email-verified self-registration, optional Google OIDC sign-in, self-service password reset and maintenance requests
 
 **Security**
 - Signed 12-hour HttpOnly/SameSite sessions checked against active users and session versions
@@ -91,7 +91,9 @@ public/img/            Property photography
 
 ## Optional services
 
-Tenant email is disabled until configured. In production set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`, and the public `APP_BASE_URL`; invitation/reset expiries are controlled by `TENANT_INVITE_TTL_MINUTES` and `TENANT_RESET_TTL_MINUTES`. No provider credentials belong in Git. Tests set `EMAIL_PROVIDER=test` and capture messages in memory without sending them.
+Tenant email is disabled until configured. In production set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`, and the public `APP_BASE_URL`; invitation/reset expiries are controlled by `TENANT_INVITE_TTL_MINUTES` and `TENANT_RESET_TTL_MINUTES`. Self-registration emails a six-digit verification code; its expiry is controlled by `TENANT_REGISTRATION_CODE_TTL_MINUTES`. No provider credentials belong in Git. Tests set `EMAIL_PROVIDER=test` and capture messages in memory without sending them.
+
+Tenant portal Google sign-in is optional: set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the secure environment, enable Google OpenID Connect with `openid email profile`, and add the exact callback URI `https://your-domain/api/tenant-auth/google/callback` in Google Cloud Console. Verified email is required; OAuth state, nonce, PKCE S256, issuer, audience and stable Google subject are validated. Staff/admin login remains email/password only. Configure a private database CA with `PGSSL_CA` if needed; TLS certificate verification stays enabled.
 
 `vercel.json` schedules the idempotent lease reminder endpoint daily. Set `CRON_SECRET` in the deployment environment; email delivery for reminders is not enabled by this task.
 

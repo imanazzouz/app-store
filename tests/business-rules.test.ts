@@ -3,7 +3,7 @@ import { after, before, test } from 'node:test';
 import { mkdtemp, rm, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { Pool } from 'pg';
 
 let tempDir: string;
@@ -27,6 +27,9 @@ let currentInvoiceId: number;
 let futureInvoiceId: number;
 let concurrentInvoiceId:number;
 let tenantId: number;
+let tenantEmail:string;
+let googleOAuthState:typeof import('../src/lib/google-oauth-state');
+let auth:typeof import('../src/lib/auth');
 
 before(async () => {
   postgresUrl=process.env.ATLAS_TEST_POSTGRES_URL;
@@ -44,7 +47,7 @@ before(async () => {
     tempDir = await mkdtemp(path.join(tmpdir(), 'atlas-business-test-'));
     process.env.PGLITE_DIR = tempDir;
   }
-  process.env.EMAIL_PROVIDER='test';process.env.APP_BASE_URL='http://localhost:3000';
+  process.env.EMAIL_PROVIDER='test';process.env.APP_BASE_URL='http://localhost:3000';process.env.AUTH_SECRET='TestOnly-Auth-Secret-9274';
   process.env.ADMIN_PASSWORD = 'TestOnly-Password-9348';
   process.env.ADMIN_EMAIL = `test-admin-${testNonce}@atlas.invalid`;
   db = await import('../src/lib/db');
@@ -56,6 +59,8 @@ before(async () => {
   mailer = await import('../src/lib/mailer');
   notifications = await import('../src/lib/lease-notifications');
   tenantPortal = await import('../src/lib/tenant-portal');
+  googleOAuthState = await import('../src/lib/google-oauth-state');
+  auth = await import('../src/lib/auth');
   await db.getDb();
   const admin = await db.query<{ id: number }>('SELECT id FROM users WHERE email=$1',[process.env.ADMIN_EMAIL]);
   adminId = Number(admin[0].id);
@@ -64,7 +69,8 @@ before(async () => {
   const manager = await db.query<{ id: number }>("INSERT INTO users(name,email,password_hash,role) VALUES('Test Manager','manager@atlas.invalid','x','property_manager') RETURNING id");
   managerId = Number(manager[0].id);
   const units = await db.query<{ id: number }>('SELECT id FROM units ORDER BY id LIMIT 1');
-  const tenant = await db.query<{ id: number }>("INSERT INTO tenants(legal_name) VALUES('Test Tenant') RETURNING id");
+  tenantEmail=`main-tenant-${testNonce}@atlas.invalid`;
+  const tenant = await db.query<{ id: number }>("INSERT INTO tenants(legal_name,email) VALUES('Test Tenant',$1) RETURNING id",[tenantEmail]);
   tenantId = Number(tenant[0].id);
   const lease = await db.query<{ id: number }>(`INSERT INTO leases(lease_number,unit_id,start_date,end_date,rent_amount,rent_period,due_day,security_deposit,status,approved_by)
     VALUES('TEST-LEASE', $1, DATE '2026-01-01', DATE '2027-12-31', 1000, 'monthly', 1, 500, 'active', $2) RETURNING id`, [Number(units[0].id),adminId]);
@@ -99,6 +105,22 @@ test('every admin API route enforces a DB-resolved staff session in the handler'
   async function routeFiles(dir:string):Promise<string[]>{const entries=await readdir(dir,{withFileTypes:true});const nested=await Promise.all(entries.map(e=>e.isDirectory()?routeFiles(`${dir}/${e.name}`):e.name==='route.ts'?[`${dir}/${e.name}`]:[]));return nested.flat()}
   const files=await routeFiles('src/app/api/admin');assert.ok(files.length>0);
   for(const file of files){const source=await readFile(file,'utf8');assert.match(source,/getSession/ ,`${file} must resolve the staff session server-side`);assert.match(source,/if\s*\(\s*!session\s*\)/,`${file} must reject missing or revoked sessions in its handler`)}
+});
+
+test('Google OAuth state is unpredictable, signed, and rejects tampering', () => {
+  const state=googleOAuthState.createGoogleOAuthState();assert.ok(state.state.length>=40);assert.ok(state.nonce.length>=40);assert.equal(state.codeChallenge,createHash('sha256').update(state.codeVerifier).digest('base64url'));assert.deepEqual(googleOAuthState.verifyGoogleOAuthState(state.cookie,state.state),{state:state.state,nonce:state.nonce,codeVerifier:state.codeVerifier});assert.equal(googleOAuthState.verifyGoogleOAuthState(state.cookie,`${state.state}x`),null);assert.equal(googleOAuthState.verifyGoogleOAuthState(`${state.cookie.slice(0,-1)}x`,state.state),null);assert.equal(googleOAuthState.verifyGoogleOAuthState(undefined,state.state),null);
+});
+
+test('self-registration requires a one-time six-digit email code and safely links existing tenants', async () => {
+  const email=`signup-${testNonce}@atlas.invalid`;mailer.clearTestOutbox();assert.equal(await tenantAuth.startTenantRegistration({email,legal_name:'New Self Registered Tenant',password:'Self-Reg-Password-1122'},'198.51.100.40'),true);
+  let messages=mailer.readTestOutbox();let code=messages.at(-1)!.text.split('هو: ')[1]?.slice(0,6);assert.ok(code);assert.match(messages.at(-1)!.text,/رمز تأكيد/);
+  const pending=await db.query<{code_hash:string}>('SELECT code_hash FROM tenant_registration_challenges WHERE lower(email)=lower($1) AND consumed_at IS NULL',[email]);assert.equal(pending.length,1);assert.notEqual(pending[0].code_hash,code);
+  const created=await tenantAuth.completeTenantRegistration(email,code!);assert.ok(created);assert.equal(created.email,email);assert.equal(created.password_change_required,false);
+  const newTenant=await db.query<{id:number;legal_name:string;portal_active:boolean;portal_email_verified_at:string|null;portal_password_hash:string}>('SELECT id,legal_name,portal_active,portal_email_verified_at,portal_password_hash FROM tenants WHERE lower(email)=lower($1)',[email]);assert.equal(newTenant.length,1);assert.equal(newTenant[0].legal_name,'New Self Registered Tenant');assert.equal(newTenant[0].portal_active,true);assert.ok(newTenant[0].portal_email_verified_at);assert.equal(auth.verifyPassword('Self-Reg-Password-1122',newTenant[0].portal_password_hash),true);assert.equal(await tenantAuth.completeTenantRegistration(email,code!),null);
+  mailer.clearTestOutbox();assert.equal(await tenantAuth.startTenantRegistration({email:tenantEmail,legal_name:'Do Not Replace Existing Legal Name',password:'Existing-Link-Password-3344'},'198.51.100.41'),true);messages=mailer.readTestOutbox();code=messages.at(-1)!.text.split('هو: ')[1]?.slice(0,6);assert.ok(code);const linked=await tenantAuth.completeTenantRegistration(tenantEmail,code!);assert.equal(linked?.id,tenantId);const existing=await db.query<{count:number;legal_name:string;portal_email_verified_at:string|null}>('SELECT COUNT(*)::int AS count,min(legal_name) AS legal_name,max(portal_email_verified_at)::text AS portal_email_verified_at FROM tenants WHERE lower(email)=lower($1)',[tenantEmail]);assert.equal(Number(existing[0].count),1);assert.equal(existing[0].legal_name,'Test Tenant');assert.ok(existing[0].portal_email_verified_at);
+  await db.query('UPDATE tenants SET portal_active=false WHERE id=$1',[tenantId]);mailer.clearTestOutbox();await tenantAuth.startTenantRegistration({email:tenantEmail,legal_name:'Disabled Account Claim',password:'Disabled-Claim-Password-7788'},'198.51.100.43');messages=mailer.readTestOutbox();code=messages.at(-1)!.text.split('هو: ')[1]?.slice(0,6);assert.ok(code);assert.equal(await tenantAuth.completeTenantRegistration(tenantEmail,code!),null);const disabled=await db.query<{portal_active:boolean}>('SELECT portal_active FROM tenants WHERE id=$1',[tenantId]);assert.equal(disabled[0].portal_active,false);
+  const expiredEmail=`expired-${testNonce}@atlas.invalid`;mailer.clearTestOutbox();await tenantAuth.startTenantRegistration({email:expiredEmail,legal_name:'Expired OTP Tenant',password:'Expired-Reg-Password-5566'},'198.51.100.42');messages=mailer.readTestOutbox();code=messages.at(-1)!.text.split('هو: ')[1]?.slice(0,6);assert.ok(code);await db.query("UPDATE tenant_registration_challenges SET expires_at=now()-interval '1 minute' WHERE lower(email)=lower($1)",[expiredEmail]);assert.equal(await tenantAuth.completeTenantRegistration(expiredEmail,code!),null);
+  const lockedEmail=`locked-${testNonce}@atlas.invalid`;mailer.clearTestOutbox();await tenantAuth.startTenantRegistration({email:lockedEmail,legal_name:'Locked OTP Tenant',password:'Locked-Reg-Password-8899'},'198.51.100.44');messages=mailer.readTestOutbox();code=messages.at(-1)!.text.split('هو: ')[1]?.slice(0,6);assert.ok(code);const wrongCode=code==='000000'?'000001':'000000';for(let i=0;i<5;i++)assert.equal(await tenantAuth.completeTenantRegistration(lockedEmail,wrongCode),null);assert.equal(await tenantAuth.completeTenantRegistration(lockedEmail,code!),null);
 });
 
 test('partial payment allocates atomically and retains the unpaid balance', async () => {
