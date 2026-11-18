@@ -18,137 +18,137 @@ type SeedRow = {
 
 const LISTINGS: SeedRow[] = [
   {
-    title: 'Hydra Business Center — Floor 4',
+    title: 'مركز حيدرة للأعمال — الطابق الرابع',
     type: 'commercial',
     status: 'available',
-    price: 9800,
+    price: 980000,
     area_sqm: 420,
     beds: null,
-    address: '12 Chemin des Glycines, Hydra',
-    city: 'Algiers',
+    address: '١٢ طريق فيلا الياسمين، حيدرة',
+    city: 'الجزائر العاصمة',
     description:
-      "A full-floor office suite in Atlas REIT's flagship Hydra Business Center. Open-plan workspace, three glass-partitioned meeting rooms and a reception lobby, finished to a warm contemporary standard with panoramic city views.",
-    features: 'Raised access flooring\nFibre-ready comms room\n3 meeting rooms\n2 reserved parking bays\n24/7 building security',
+      "مساحة مكتبية كاملة في مركز حيدرة للأعمال. تضم مساحة عمل مفتوحة وثلاث قاعات اجتماعات مفصولة بالزجاج واستقبالاً بإطلالة واسعة على المدينة.",
+    features: 'أرضية مرتفعة\nغرفة اتصالات جاهزة للألياف\n٣ قاعات اجتماعات\nموقفان مخصصان\nحراسة على مدار الساعة',
     images: ['/img/commercial-1.jpg'],
     featured: true,
   },
   {
-    title: 'Didouche Mourad Retail Flagship',
+    title: 'واجهة ديدوش مراد التجارية',
     type: 'commercial',
     status: 'available',
-    price: 14500,
+    price: 1450000,
     area_sqm: 260,
     beds: null,
-    address: '48 Didouche Mourad, Central District',
-    city: 'Algiers',
+    address: '٤٨ شارع ديدوش مراد، وسط المدينة',
+    city: 'الجزائر العاصمة',
     description:
-      'Prime ground-floor retail flagship on the city’s busiest shopping street. Full-width display frontage, back-of-house storage and a separate street entrance — ideal for a flagship store or showroom.',
-    features: '11m display frontage\nRear service access\nHigh footfall location\n3-phase power\nLandlord consent for fit-out',
+      'محل تجاري مميز في الطابق الأرضي بأحد أكثر شوارع التسوق نشاطاً. واجهة عرض عريضة ومستودع خلفي ومدخل مستقل، مناسب لمتجر رئيسي أو صالة عرض.',
+    features: 'واجهة عرض بطول ١١ متراً\nمدخل خدمة خلفي\nموقع حيوي\nكهرباء ثلاثية الطور\nإمكانية تهيئة المحل',
     images: ['/img/commercial-2.jpg'],
     featured: true,
   },
   {
-    title: 'Oran Corniche Offices',
+    title: 'مكاتب كورنيش وهران',
     type: 'commercial',
     status: 'leased',
-    price: 11200,
+    price: 1120000,
     area_sqm: 610,
     beds: null,
-    address: 'Boulevard de la Corniche, Es Sénia corridor',
-    city: 'Oran',
+    address: 'جادة الكورنيش، محور السانية',
+    city: 'وهران',
     description:
-      'Sea-view corporate offices over two connected floors, currently leased to a regional logistics group. Efficient column-free plate with a private ground-floor entrance and visitor parking.',
-    features: 'Sea views\nColumn-free floor plate\nPrivate entrance\nGenerator backup\nVisitor parking',
+      'مكاتب للشركات مطلة على البحر موزعة على طابقين متصلين، مؤجرة حالياً لشركة لوجستية. تضم مدخلاً خاصاً ومواقف للزوار.',
+    features: 'إطلالة بحرية\nمساحة دون أعمدة\nمدخل خاص\nمولد احتياطي\nمواقف للزوار',
     images: ['/img/commercial-3.jpg'],
     featured: false,
   },
   {
-    title: 'El Biar Garden Residences — Apt 12',
+    title: 'إقامات حديقة الأبيار — شقة ١٢',
     type: 'residential',
     status: 'available',
-    price: 2400,
+    price: 240000,
     area_sqm: 185,
     beds: 3,
-    address: '8 Rue des Jardins, El Biar',
-    city: 'Algiers',
+    address: '٨ شارع الحدائق، الأبيار',
+    city: 'الجزائر العاصمة',
     description:
-      'Light-filled three-bedroom apartment opening onto a shared landscaped garden. Renovated kitchen, generous living room with balcony, and secure gated parking in a quiet residential street.',
-    features: 'Private balcony\nGated parking\nElevator\nSplit-system A/C\nFurnished option available',
+      'شقة مشرقة بثلاث غرف نوم تطل على حديقة مشتركة منسقة. مطبخ مجدد وصالة واسعة بشرفة وموقف سيارات آمن في شارع سكني هادئ.',
+    features: 'شرفة خاصة\nموقف سيارات مغلق\nمصعد\nتكييف منفصل\nإمكانية التأثيث',
     images: ['/img/residential-1.jpg'],
     featured: true,
   },
   {
-    title: 'Kouba Family Villa',
+    title: 'فيلا عائلية بالقبة',
     type: 'residential',
     status: 'available',
-    price: 3900,
+    price: 390000,
     area_sqm: 420,
     beds: 5,
-    address: 'Route de Birkhadem, Kouba',
-    city: 'Algiers',
+    address: 'طريق بئر خادم، القبة',
+    city: 'الجزائر العاصمة',
     description:
-      'Detached five-bedroom villa with mature olive garden, staff quarters and a double garage. Two living reception rooms, roof terrace, and independent studio suitable for guests or home office.',
-    features: 'Private garden\nRoof terrace\nGuest studio\nDouble garage\nMains water tank + pump',
+      'فيلا مستقلة بخمس غرف نوم وحديقة زيتون وكراج مزدوج. تضم صالتي استقبال وشرفة على السطح واستوديو مستقلاً للضيوف أو للعمل.',
+    features: 'حديقة خاصة\nشرفة سطح\nاستوديو للضيوف\nكراج مزدوج\nخزان مياه ومضخة',
     images: ['/img/residential-2.jpg'],
     featured: false,
   },
   {
-    title: 'Constantine Riverside Flat — Apt 7',
+    title: 'شقة مطلة على وادي الرمال — شقة ٧',
     type: 'residential',
     status: 'leased',
-    price: 1450,
+    price: 145000,
     area_sqm: 110,
     beds: 2,
-    address: 'Cité Ferhat Boussaad, Constantine',
-    city: 'Constantine',
+    address: 'حي فرحات بوسعد، قسنطينة',
+    city: 'قسنطينة',
     description:
-      'Two-bedroom apartment overlooking the Rhumel valley, with a long south-facing terrace. Recently refurbished throughout; leased to a long-term corporate tenant.',
-    features: 'Valley views\nSouth terrace\nRenovated 2025\nElevator\nCellar storage',
+      'شقة بغرفتي نوم تطل على وادي الرمال مع شرفة واسعة باتجاه الجنوب. جُددت مؤخراً وهي مؤجرة لمستأجر طويل الأمد.',
+    features: 'إطلالة على الوادي\nشرفة جنوبية\nتجديد ٢٠٢٥\nمصعد\nمخزن سفلي',
     images: ['/img/residential-3.jpg'],
     featured: false,
   },
   {
-    title: 'Rouiba Logistics Hub — Unit B2',
+    title: 'مركز رويبة اللوجستي — الوحدة B2',
     type: 'warehouse',
     status: 'available',
-    price: 12000,
+    price: 1200000,
     area_sqm: 3200,
     beds: null,
-    address: 'Zone Industrielle, Route de l’Ouest, Rouiba',
-    city: 'Algiers',
+    address: 'المنطقة الصناعية، الطريق الغربي، رويبة',
+    city: 'الجزائر العاصمة',
     description:
-      'Modern cross-dock logistics unit with twelve loading positions, 11m clear height and a secured 4,000m² yard. Connected to the airport–port corridor with direct heavy-vehicle access.',
-    features: '12 loading docks\n11m clear height\nSecured yard (4,000m²)\n3-phase power 400A\nOffice mezzanine 180m²',
+      'وحدة لوجستية حديثة تضم ١٢ منصة تحميل وارتفاعاً صافياً ١١ متراً وساحة مؤمنة بمساحة ٤٠٠٠ م²، مع وصول مباشر للشاحنات.',
+    features: '١٢ منصة تحميل\nارتفاع صافٍ ١١ متراً\nساحة مؤمنة (٤٠٠٠ م²)\nكهرباء ثلاثية الطور ٤٠٠ أمبير\nمكاتب علوية ١٨٠ م²',
     images: ['/img/warehouse-1.jpg'],
     featured: true,
   },
   {
-    title: 'Es Sénia Distribution Park — Unit 5',
+    title: 'منطقة السانية للتوزيع — الوحدة ٥',
     type: 'warehouse',
     status: 'available',
-    price: 7400,
+    price: 740000,
     area_sqm: 1800,
     beds: null,
-    address: 'Es Sénia Distribution Park, Zone d’activité 4',
-    city: 'Oran',
+    address: 'منطقة السانية للتوزيع، منطقة النشاط ٤',
+    city: 'وهران',
     description:
-      'Mid-size distribution warehouse in a managed industrial park with shared weighbridge and canteen. Sprinklered, with 6 dock levellers and 800m² of attached offices.',
-    features: 'Sprinkler system\n6 dock levellers\n800m² offices\nShared weighbridge\nFenced & guarded',
+      'مستودع توزيع متوسط في منطقة صناعية مجهزة، مع ميزان شاحنات ومطعم مشترك ونظام رش آلي وست منصات تحميل ومكاتب ملحقة.',
+    features: 'نظام رش آلي\n٦ منصات تحميل\nمكاتب ٨٠٠ م²\nميزان شاحنات مشترك\nسياج وحراسة',
     images: ['/img/warehouse-2.jpg'],
     featured: false,
   },
   {
-    title: 'Ain Smara Cold-Storage Store — Unit C',
+    title: 'مخازن عين سمارة المبردة — الوحدة C',
     type: 'warehouse',
     status: 'leased',
-    price: 5600,
+    price: 560000,
     area_sqm: 950,
     beds: null,
-    address: 'Ain Smara Industrial Zone',
-    city: 'Batna',
+    address: 'المنطقة الصناعية عين سمارة',
+    city: 'باتنة',
     description:
-      'Insulated cold-storage facility with two temperature chambers and a dedicated refrigerated dock. Leased by a regional food distributor on a five-year term.',
-    features: 'Dual temperature chambers\nRefrigerated dock\nBackup generator\nHygienic wall panels\n24/7 access',
+      'منشأة تخزين مبرد بعزل حراري تضم حجرتين بدرجتي حرارة ومنصة تحميل مبردة. مؤجرة لشركة توزيع مواد غذائية بعقد خمس سنوات.',
+    features: 'حجرتان بدرجتي حرارة\nمنصة تحميل مبردة\nمولد احتياطي\nألواح جدران صحية\nدخول على مدار الساعة',
     images: ['/img/warehouse-3.jpg'],
     featured: false,
   },
@@ -156,24 +156,27 @@ const LISTINGS: SeedRow[] = [
 
 /**
  * First-run seed: creates the initial administrator (from env variables) and
- * the demo portfolio. Every insert is guarded, so re-running is harmless.
+ * the demo portfolio with illustrative DZD asking rents. Every insert is guarded, so re-running is harmless.
  */
 export async function runSeed(db: Db): Promise<void> {
   // 1. Administrator account ────────────────────────────────────────────
   const email = (process.env.ADMIN_EMAIL || 'admin@atlasreit.com').toLowerCase();
-  const password = process.env.ADMIN_PASSWORD || 'AtlasREIT!2026';
-  const name = process.env.ADMIN_NAME || 'Site Administrator';
+  const password = process.env.ADMIN_PASSWORD;
+  const name = process.env.ADMIN_NAME || 'مدير النظام';
 
   const existing = await db.query<{ id: number }>(
     'SELECT id FROM users WHERE email = $1',
     [email],
   );
-  if (existing.length === 0) {
+  if (existing.length === 0 && password) {
     await db.query(
       `INSERT INTO users (name, email, password_hash, role)
        VALUES ($1, $2, $3, 'admin')`,
       [name, email, hashPassword(password)],
     );
+  }
+  if (existing.length === 0 && process.env.VERCEL && !password) {
+    throw new Error('Set ADMIN_PASSWORD before deploying so the default administrator is created securely.');
   }
 
   // 2. Portfolio listings ───────────────────────────────────────────────

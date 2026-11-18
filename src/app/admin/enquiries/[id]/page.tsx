@@ -2,12 +2,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getEnquiry } from '@/lib/enquiries';
 import { formatDate } from '@/lib/csv';
+import{getSession}from'@/lib/session';import{canManagePropertyOperations}from'@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
 type Props = { params: Promise<{ id: string }> };
 
 export default async function EnquiryDetailPage({ params }: Props) {
+  const session=await getSession();if(!canManagePropertyOperations(session?.role??''))return <div className="admin-page"><p className="empty-note">ليست لديك صلاحية عرض الاستفسار.</p></div>;
   const id = Number((await params).id);
   if (!Number.isInteger(id) || id <= 0) notFound();
   const enquiry = await getEnquiry(id);
@@ -17,40 +19,40 @@ export default async function EnquiryDetailPage({ params }: Props) {
     <div className="admin-page narrow">
       <div className="admin-page-head">
         <div>
-          <h1>Enquiry from {enquiry.name}</h1>
-          <p className="admin-sub">Received {formatDate(enquiry.created_at)}</p>
+          <h1>استفسار من {enquiry.name}</h1>
+          <p className="admin-sub">تاريخ الاستلام: {formatDate(enquiry.created_at)}</p>
         </div>
         <Link href="/admin/enquiries" className="btn btn-ghost btn-sm">
-          ← Back to enquiries
+          العودة إلى الاستفسارات ←
         </Link>
       </div>
 
       <div className="admin-cols">
         <section className="panel detail-panel">
           <div className="panel-head">
-            <h2>Message</h2>
-            <span className={`status-pill s-${enquiry.status}`}>{enquiry.status}</span>
+            <h2>الرسالة</h2>
+            <span className={`status-pill s-${enquiry.status}`}>{enquiry.status === 'new' ? 'جديد' : enquiry.status === 'contacted' ? 'تم التواصل' : 'مغلق'}</span>
           </div>
           <dl className="kv">
-            <dt>Property</dt>
+            <dt>العقار</dt>
             <dd>
               {enquiry.listing_id ? (
                 <Link href={`/properties/${enquiry.listing_id}`} target="_blank">
                   {enquiry.listing_title} ↗
                 </Link>
               ) : (
-                '(listing was removed)'
+                '(تم حذف الإعلان)'
               )}
             </dd>
-            <dt>Name</dt>
+            <dt>الاسم</dt>
             <dd>{enquiry.name}</dd>
-            <dt>Email</dt>
+            <dt>البريد الإلكتروني</dt>
             <dd>
               <a href={`mailto:${enquiry.email}`}>{enquiry.email}</a>
             </dd>
-            <dt>Phone</dt>
+            <dt>الهاتف</dt>
             <dd>{enquiry.phone ? <a href={`tel:${enquiry.phone}`}>{enquiry.phone}</a> : '—'}</dd>
-            <dt>Received</dt>
+            <dt>تاريخ الاستلام</dt>
             <dd>{formatDate(enquiry.created_at)}</dd>
           </dl>
 
@@ -58,7 +60,7 @@ export default async function EnquiryDetailPage({ params }: Props) {
             {enquiry.message ? (
               <p>{enquiry.message}</p>
             ) : (
-              <p className="empty-note">No extra message was written.</p>
+              <p className="empty-note">لم يضف العميل رسالة أخرى.</p>
             )}
           </div>
 
@@ -71,17 +73,17 @@ export default async function EnquiryDetailPage({ params }: Props) {
                 `Dear ${enquiry.name},\n\nThank you for your interest in “${enquiry.listing_title ?? 'Atlas REIT property'}”.\n\n…\n\nKind regards,\nAtlas REIT — Leasing Team`,
               )}`}
             >
-              Reply with application pack
+              الرد على الاستفسار
             </a>
           </div>
         </section>
 
         <section className="panel detail-panel">
           <div className="panel-head">
-            <h2>Follow-up status</h2>
+            <h2>حالة المتابعة</h2>
           </div>
           <p className="panel-note">
-            Mark your progress so colleagues know where this enquiry stands.
+            حدّث حالة المتابعة ليعرف أعضاء الفريق آخر المستجدات.
           </p>
           <div className="status-actions">
             {(['new', 'contacted', 'closed'] as const).map((status) => (
@@ -99,21 +101,21 @@ export default async function EnquiryDetailPage({ params }: Props) {
                   disabled={enquiry.status === status}
                 >
                   {status === 'new'
-                    ? 'Mark as new'
+                    ? 'إعادة إلى جديد'
                     : status === 'contacted'
-                      ? 'Mark contacted'
-                      : 'Close enquiry'}
+                      ? 'تم التواصل'
+                      : 'إغلاق الاستفسار'}
                 </button>
               </form>
             ))}
           </div>
 
           <div className="info-box">
-            <h3>What happens next</h3>
+            <h3>الخطوات التالية</h3>
             <ol>
-              <li>Reply to the visitor with the full application pack.</li>
-              <li>Once they submit documents offline, review and sign.</li>
-              <li>Flip the unit to <strong>Leased</strong> in Listings.</li>
+              <li>الرد على العميل وإرسال معلومات الطلب.</li>
+              <li>مراجعة المستندات عند استلامها واستكمال التوقيع.</li>
+              <li>تحديث حالة الوحدة إلى <strong>مؤجرة</strong> في الإعلانات.</li>
             </ol>
           </div>
         </section>

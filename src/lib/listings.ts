@@ -1,4 +1,4 @@
-import { query } from './db';
+import { query, withTransaction } from './db';
 import type { ListingInput, PropertyType } from './validation';
 
 export type Listing = {
@@ -7,6 +7,7 @@ export type Listing = {
   type: PropertyType;
   status: 'available' | 'leased';
   price: number;
+  currency: 'DZD';
   area_sqm: number;
   beds: number | null;
   address: string;
@@ -35,6 +36,7 @@ function mapListing(row: Record<string, unknown>): Listing {
     type: row.type as PropertyType,
     status: row.status as Listing['status'],
     price: Number(row.price),
+    currency: 'DZD',
     area_sqm: Number(row.area_sqm),
     beds: row.beds === null || row.beds === undefined ? null : Number(row.beds),
     address: String(row.address ?? ''),
@@ -114,32 +116,38 @@ export async function getPortfolioStats(): Promise<{
 }
 
 export async function createListing(input: ListingInput): Promise<number> {
-  const rows = await query<{ id: number }>(
-    `INSERT INTO listings
-       (title, type, status, price, area_sqm, beds, address, city,
-        description, features, images, featured)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-     RETURNING id`,
-    [
-      input.title,
-      input.type,
-      input.status,
-      input.price,
-      input.area_sqm,
-      input.beds ?? null,
-      input.address,
-      input.city,
-      input.description,
-      input.features,
-      JSON.stringify(input.images),
-      input.featured,
-    ],
-  );
-  return Number(rows[0].id);
+  return withTransaction(async (tx) => {
+    const rows = await tx.query<{ id: number }>(
+      `INSERT INTO listings
+         (title, type, status, price, area_sqm, beds, address, city,
+          description, features, images, featured)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING id`,
+      [input.title, input.type, input.status, input.price, input.area_sqm,
+        input.beds ?? null, input.address, input.city, input.description,
+        input.features, JSON.stringify(input.images), input.featured],
+    );
+    const id = Number(rows[0].id);
+    const properties = await tx.query<{ id: number }>(
+      `INSERT INTO properties (code, name, type, description, address, municipality, legacy_listing_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+      [`AUTO-${id}`, input.title, input.type, input.description, input.address, input.city, id],
+    );
+    const units = await tx.query<{ id: number }>(
+      `INSERT INTO units (property_id, code, label, type, area_sqm, bedrooms, asking_rent,
+                          occupancy_status, legacy_listing_id)
+       VALUES ($1,'1',$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
+      [Number(properties[0].id), input.title, input.type, input.area_sqm, input.beds ?? null,
+        input.price, input.status === 'leased' ? 'leased' : 'vacant', id],
+    );
+    await tx.query('UPDATE listings SET unit_id = $1 WHERE id = $2', [Number(units[0].id), id]);
+    return id;
+  });
 }
 
 export async function updateListing(id: number, input: ListingInput): Promise<void> {
-  await query(
+  await withTransaction(async (tx) => {
+  await tx.query(
     `UPDATE listings SET
        title = $1, type = $2, status = $3, price = $4, area_sqm = $5,
        beds = $6, address = $7, city = $8, description = $9, features = $10,
@@ -161,16 +169,33 @@ export async function updateListing(id: number, input: ListingInput): Promise<vo
       id,
     ],
   );
+  await tx.query(
+    `UPDATE properties SET name = $1, type = $2, description = $3,
+       address = $4, municipality = $5, updated_at = now()
+     WHERE legacy_listing_id = $6`,
+    [input.title, input.type, input.description, input.address, input.city, id],
+  );
+  await tx.query(
+    `UPDATE units SET label = $1, type = $2, area_sqm = $3, bedrooms = $4,
+       asking_rent = $5, occupancy_status = $6, updated_at = now()
+     WHERE legacy_listing_id = $7`,
+    [input.title, input.type, input.area_sqm, input.beds ?? null, input.price,
+      input.status === 'leased' ? 'leased' : 'vacant', id],
+  );
+  });
 }
 
 export async function setListingStatus(
   id: number,
   status: 'available' | 'leased',
 ): Promise<void> {
-  await query('UPDATE listings SET status = $1, updated_at = now() WHERE id = $2', [
-    status,
-    id,
-  ]);
+  await withTransaction(async (tx) => {
+    await tx.query('UPDATE listings SET status = $1, updated_at = now() WHERE id = $2', [status, id]);
+    await tx.query(
+      `UPDATE units SET occupancy_status = $1, updated_at = now() WHERE legacy_listing_id = $2`,
+      [status === 'leased' ? 'leased' : 'vacant', id],
+    );
+  });
 }
 
 export async function deleteListing(id: number): Promise<void> {

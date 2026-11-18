@@ -1,0 +1,8 @@
+import{canRequestLease,canManageRoles}from'@/lib/permissions';
+import { getTenants } from '@/lib/leasing';
+import { TenantForm } from '@/components/lease-finance-forms';
+import TenantPortalAccess from '@/components/tenant-portal-access';
+import {getSession} from '@/lib/session';
+export const dynamic='force-dynamic';
+export default async function TenantsPage(){
+const accessSession=await getSession();if(!canRequestLease(accessSession?.role??''))return <div className="admin-page"><p className="empty-note">ليست لديك صلاحية عرض هذه الصفحة.</p></div>;const[tenants,session]=await Promise.all([getTenants(),getSession()]);return <div className="admin-page"><div className="admin-page-head"><div><h1>المستأجرون</h1><p className="admin-sub">ملفات المستأجرين وبيانات التواصل الضرورية لإدارة العقود.</p></div></div><section className="panel form-panel"><h2>إضافة مستأجر</h2><TenantForm/></section><section className="panel table-panel"><table className="admin-table"><thead><tr><th>الاسم القانوني</th><th>النوع</th><th>بيانات التواصل</th><th>عنوان المراسلة</th><th>بوابة المستأجر</th></tr></thead><tbody>{tenants.map(t=><tr key={t.id}><td data-label="الاسم القانوني">{t.legal_name}</td><td data-label="النوع">{t.tenant_type==='company'?'شركة':'فرد'}</td><td data-label="بيانات التواصل">{t.email||'—'}{t.phone?<span className="cell-sub">{t.phone}</span>:null}</td><td data-label="العنوان">{t.mailing_address||'—'}</td><td data-label="بوابة المستأجر">{canManageRoles(session?.role??'')?<TenantPortalAccess id={t.id} email={t.email} active={t.portal_active} />:t.portal_active?'مفعلة':'غير مفعلة'}</td></tr>)}</tbody></table>{!tenants.length&&<div className="empty-state"><h2>لا يوجد مستأجرون بعد</h2><p>أضف المستأجر قبل إنشاء عقد.</p></div>}</section></div>}

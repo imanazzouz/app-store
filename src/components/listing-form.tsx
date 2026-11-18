@@ -55,7 +55,7 @@ export default function ListingForm({ listing }: Props) {
     const clean = url.trim();
     if (!clean) return;
     if (draft.images.length >= 12) {
-      setError('Maximum of 12 images per listing.');
+      setError('الحد الأقصى ١٢ صورة لكل إعلان.');
       return;
     }
     set('images', [...draft.images, clean]);
@@ -74,13 +74,13 @@ export default function ListingForm({ listing }: Props) {
       const res = await fetch('/api/admin/upload', { method: 'POST', body });
       const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
       if (!res.ok || !json.url) {
-        setUploadNote(json.error || 'Upload failed.');
+        setUploadNote(json.error || 'فشل رفع الصورة.');
       } else {
         set('images', [...draft.images, json.url]);
-        setUploadNote('Uploaded ✓');
+        setUploadNote('تم رفع الصورة ✓');
       }
     } catch {
-      setUploadNote('Upload failed — check your connection.');
+      setUploadNote('تعذر رفع الصورة، تحقق من اتصالك.');
     } finally {
       setUploading(false);
     }
@@ -114,14 +114,14 @@ export default function ListingForm({ listing }: Props) {
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(json.error || 'Could not save the listing.');
+        setError(json.error || 'تعذر حفظ الإعلان.');
         setBusy(false);
         return;
       }
       router.push('/admin/listings?saved=1');
       router.refresh();
     } catch {
-      setError('Network error — please try again.');
+      setError('تعذر الاتصال بالشبكة، حاول مجدداً.');
       setBusy(false);
     }
   }
@@ -135,10 +135,10 @@ export default function ListingForm({ listing }: Props) {
       )}
 
       <section className="panel form-panel">
-        <h2>Unit details</h2>
+        <h2>تفاصيل الوحدة</h2>
         <div className="form-row">
           <label className="field span-2">
-            <span>Title *</span>
+            <span>العنوان *</span>
             <input
               type="text"
               value={draft.title}
@@ -150,7 +150,7 @@ export default function ListingForm({ listing }: Props) {
             />
           </label>
           <label className="field">
-            <span>Property type *</span>
+            <span>نوع العقار *</span>
             <select value={draft.type} onChange={(e) => set('type', e.target.value as Draft['type'])}>
               {propertyTypes.map((t) => (
                 <option key={t} value={t}>
@@ -160,17 +160,17 @@ export default function ListingForm({ listing }: Props) {
             </select>
           </label>
           <label className="field">
-            <span>Status *</span>
+            <span>الحالة *</span>
             <select value={draft.status} onChange={(e) => set('status', e.target.value as Draft['status'])}>
-              <option value="available">Available</option>
-              <option value="leased">Leased</option>
+              <option value="available">متاحة</option>
+              <option value="leased">مؤجرة</option>
             </select>
           </label>
         </div>
 
         <div className="form-row">
           <label className="field">
-            <span>Rent per month (USD) *</span>
+            <span>الإيجار الشهري (دينار جزائري) *</span>
             <input
               type="number"
               min={1}
@@ -178,11 +178,11 @@ export default function ListingForm({ listing }: Props) {
               value={draft.price}
               onChange={(e) => set('price', e.target.value)}
               required
-              placeholder="9800"
+              placeholder="980000"
             />
           </label>
           <label className="field">
-            <span>Area (m²) *</span>
+            <span>المساحة (م²) *</span>
             <input
               type="number"
               min={1}
@@ -194,7 +194,7 @@ export default function ListingForm({ listing }: Props) {
             />
           </label>
           <label className="field">
-            <span>Bedrooms (residential)</span>
+            <span>عدد الغرف (للسكني)</span>
             <input
               type="number"
               min={0}
@@ -209,7 +209,7 @@ export default function ListingForm({ listing }: Props) {
 
         <div className="form-row">
           <label className="field">
-            <span>City</span>
+            <span>المدينة</span>
             <input
               type="text"
               value={draft.city}
@@ -219,7 +219,7 @@ export default function ListingForm({ listing }: Props) {
             />
           </label>
           <label className="field span-2">
-            <span>Full address</span>
+            <span>العنوان الكامل</span>
             <input
               type="text"
               value={draft.address}
@@ -231,7 +231,7 @@ export default function ListingForm({ listing }: Props) {
         </div>
 
         <label className="field">
-          <span>Description * (at least 20 characters)</span>
+          <span>الوصف * (٢٠ حرفاً على الأقل)</span>
           <textarea
             value={draft.description}
             onChange={(e) => set('description', e.target.value)}
@@ -244,7 +244,7 @@ export default function ListingForm({ listing }: Props) {
         </label>
 
         <label className="field">
-          <span>Features — one per line</span>
+          <span>المزايا — ميزة واحدة في كل سطر</span>
           <textarea
             value={draft.features}
             onChange={(e) => set('features', e.target.value)}
@@ -252,7 +252,7 @@ export default function ListingForm({ listing }: Props) {
             maxLength={3000}
             placeholder={'Raised access flooring\n3 meeting rooms\n24/7 security'}
           />
-          <small className="field-hint">These appear as the bullet list on the unit page.</small>
+          <small className="field-hint">تظهر هذه المزايا في صفحة الوحدة.</small>
         </label>
 
         <label className="check-field">
@@ -261,20 +261,19 @@ export default function ListingForm({ listing }: Props) {
             checked={draft.featured}
             onChange={(e) => set('featured', e.target.checked)}
           />
-          <span>Feature this unit on the home page</span>
+          <span>إبراز هذه الوحدة في الصفحة الرئيسية</span>
         </label>
       </section>
 
       <section className="panel form-panel">
-        <h2>Photos</h2>
+        <h2>الصور</h2>
         <p className="panel-note">
-          The <strong>first photo is the cover image</strong> shown on listings.
-          Drag-free & simple: add by upload or paste a link.
+          <strong>الصورة الأولى هي صورة الغلاف</strong> التي تظهر في الإعلانات. ارفع صورة أو أضف رابطاً.
         </p>
 
         <div className="image-actions">
           <label className="btn btn-outline btn-sm file-btn">
-            {uploading ? 'Uploading…' : 'Upload photo'}
+            {uploading ? 'جارٍ الرفع…' : 'رفع صورة'}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp,image/avif"
@@ -292,7 +291,7 @@ export default function ListingForm({ listing }: Props) {
               maxLength={500}
             />
             <button type="button" className="btn btn-outline btn-sm" onClick={() => addImage(urlInput)}>
-              Add link
+              إضافة الرابط
             </button>
           </div>
         </div>
@@ -304,7 +303,7 @@ export default function ListingForm({ listing }: Props) {
               <li key={src + i} className="image-chip">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" width={96} height={64} />
-                <span className="chip-label">{i === 0 ? 'Cover' : `#${i + 1}`}</span>
+                <span className="chip-label">{i === 0 ? 'الغلاف' : `#${i + 1}`}</span>
                 <button
                   type="button"
                   className="chip-remove"
@@ -317,16 +316,16 @@ export default function ListingForm({ listing }: Props) {
             ))}
           </ul>
         ) : (
-          <p className="empty-note">No photos yet — add at least one.</p>
+          <p className="empty-note">لا توجد صور بعد — أضف صورة واحدة على الأقل.</p>
         )}
       </section>
 
       <div className="form-footer">
         <button type="submit" className="btn btn-primary btn-lg" disabled={busy || uploading}>
-          {busy ? 'Saving…' : listing ? 'Save changes' : 'Create listing'}
+          {busy ? 'جارٍ الحفظ…' : listing ? 'حفظ التغييرات' : 'إنشاء الإعلان'}
         </button>
         <button type="button" className="btn btn-ghost btn-lg" onClick={() => router.back()} disabled={busy}>
-          Cancel
+          إلغاء
         </button>
       </div>
     </form>

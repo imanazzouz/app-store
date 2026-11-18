@@ -4,14 +4,14 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: {
-    default: 'Atlas REIT — Rental Portfolio',
-    template: '%s · Atlas REIT',
+    default: 'أطلس ريت — المحفظة العقارية',
+    template: '%s · أطلس ريت',
   },
   description:
-    'Atlas REIT owns and manages commercial, residential and industrial rental property across Algeria. Browse available units and send an enquiry — our team follows up personally with the full application pack.',
+    'أطلس ريت تدير عقارات تجارية وسكنية وصناعية في الجزائر. تصفح الوحدات المتاحة وأرسل استفسارك ليتواصل معك فريقنا.',
   openGraph: {
-    title: 'Atlas REIT — Rental Portfolio',
-    description: 'Commercial, residential and warehouse units available to lease.',
+    title: 'أطلس ريت — المحفظة العقارية',
+    description: 'عقارات تجارية وسكنية ومستودعات متاحة للإيجار في الجزائر.',
     type: 'website',
   },
   robots: { index: true, follow: true },
@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ar" dir="rtl">
       <body>{children}</body>
     </html>
   );

@@ -24,13 +24,13 @@ function throttled(ip: string): boolean {
  */
 export async function POST(req: Request) {
   if (!originAllowed(req)) {
-    return NextResponse.json({ error: 'Invalid request origin.' }, { status: 403 });
+    return NextResponse.json({ error: 'مصدر الطلب غير صالح.' }, { status: 403 });
   }
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   if (throttled(ip)) {
     return NextResponse.json(
-      { error: 'Too many submissions. Please try again shortly.' },
+      { error: 'أرسلت طلبات كثيرة. يرجى المحاولة بعد قليل.' },
       { status: 429 },
     );
   }
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   try {
     body = (await req.json()) as Record<string, unknown>;
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
+    return NextResponse.json({ error: 'بيانات الطلب غير صالحة.' }, { status: 400 });
   }
 
   // Honeypot: bots fill the hidden "company" field — pretend success, store nothing.
@@ -60,11 +60,11 @@ export async function POST(req: Request) {
     [parsed.data.listingId],
   );
   if (!listings.length) {
-    return NextResponse.json({ error: 'Property not found.' }, { status: 404 });
+    return NextResponse.json({ error: 'العقار غير موجود.' }, { status: 404 });
   }
   if (listings[0].status === 'leased') {
     return NextResponse.json(
-      { error: 'This unit has just been leased. Browse our other available units.' },
+      { error: 'تم تأجير هذه الوحدة مؤخراً. تصفح الوحدات الأخرى المتاحة.' },
       { status: 409 },
     );
   }

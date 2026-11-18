@@ -23,20 +23,26 @@ export interface Db {
   exec(sql: string): Promise<void>;
 }
 
-const g = globalThis as unknown as { __atlasDbPromise?: Promise<Db> };
+interface Driver extends Db {
+  transaction<T>(work: (tx: Db) => Promise<T>): Promise<T>;
+  close?(): Promise<void>;
+}
 
-async function createDriver(): Promise<Db> {
+const g = globalThis as unknown as { __atlasDbPromise?: Promise<Driver> };
+
+async function createDriver(): Promise<Driver> {
   const url = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 
   if (url) {
     // ── Managed Postgres (Neon, Vercel Postgres, RDS, …) ──────────────
     const { Pool } = await import('pg');
     const isLocal = /localhost|127\.0\.0\.1/.test(url);
+    const sslCa = process.env.PGSSL_CA?.replace(/\\n/g, '\n');
     const pool = new Pool({
       connectionString: url,
       max: 5,
       connectionTimeoutMillis: 10_000,
-      ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }),
+      ...(isLocal ? {} : { ssl: { rejectUnauthorized: true, ...(sslCa ? { ca: sslCa } : {}) } }),
     });
     return {
       async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
@@ -46,6 +52,28 @@ async function createDriver(): Promise<Db> {
       async exec(sql: string): Promise<void> {
         await pool.query(sql);
       },
+      async transaction<T>(work: (tx: Db) => Promise<T>): Promise<T> {
+        const client = await pool.connect();
+        await client.query('BEGIN');
+        const tx: Db = {
+          async query<Q>(sql: string, params: unknown[] = []): Promise<Q[]> {
+            const result = await client.query(sql, params);
+            return result.rows as Q[];
+          },
+          async exec(sql: string): Promise<void> { await client.query(sql); },
+        };
+        try {
+          const result = await work(tx);
+          await client.query('COMMIT');
+          return result;
+        } catch (error) {
+          await client.query('ROLLBACK');
+          throw error;
+        } finally {
+          client.release();
+        }
+      },
+      async close(): Promise<void> { await pool.end(); },
     };
   }
 
@@ -70,6 +98,16 @@ async function createDriver(): Promise<Db> {
     async exec(sql: string): Promise<void> {
       await pg.query(sql);
     },
+    async transaction<T>(work: (tx: Db) => Promise<T>): Promise<T> {
+      return pg.transaction(async (client) => work({
+        async query<Q>(sql: string, params: unknown[] = []): Promise<Q[]> {
+          const result = await client.query(sql, params);
+          return result.rows as Q[];
+        },
+        async exec(sql: string): Promise<void> { await client.exec(sql); },
+      }));
+    },
+    async close(): Promise<void> { await pg.close(); },
   };
 }
 
@@ -83,6 +121,9 @@ export async function getDb(): Promise<Db> {
       const db = await createDriver();
       await runMigrations(db);
       await runSeed(db);
+      // Seed listings may be the first listings in a fresh database. Run the
+      // idempotent bridge again so those rows also receive property/unit records.
+      await runMigrations(db);
       return db;
     })();
     // Never cache a failure — clear it so the next request retries cleanly.
@@ -91,6 +132,19 @@ export async function getDb(): Promise<Db> {
     });
   }
   return g.__atlasDbPromise;
+}
+
+/** Release a cached development/test database connection. */
+export async function closeDbForTests(): Promise<void> {
+  const handle = g.__atlasDbPromise;
+  g.__atlasDbPromise = undefined;
+  if (handle) await (await handle as Driver).close?.();
+}
+
+/** Execute related writes atomically on PostgreSQL or the local PGlite driver. */
+export async function withTransaction<T>(work: (tx: Db) => Promise<T>): Promise<T> {
+  const driver = await getDb() as Driver;
+  return driver.transaction(work);
 }
 
 /**

@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { getSession } from '@/lib/session';
+import { destroySession, getSession, SESSION_COOKIE } from '@/lib/session';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { BrandMark } from '@/components/site-header';
 import AdminNav from '@/components/admin-nav';
 import DemoBanner from '@/components/demo-banner';
@@ -17,6 +19,8 @@ export default async function AdminLayout({
   // Unauthenticated visitors only ever see the login screen (middleware
   // already redirects everything else).
   if (!session) {
+    const jar=await cookies();
+    if(jar.get(SESSION_COOKIE)?.value){await destroySession();redirect('/admin/login');}
     return <div className="admin-login-shell">{children}</div>;
   }
 
@@ -29,16 +33,16 @@ export default async function AdminLayout({
             <span className="brand-name">
               ATLAS <b>REIT</b>
             </span>
-            <span className="admin-badge">Staff</span>
+            <span className="admin-badge">الإدارة</span>
           </Link>
-          <AdminNav />
+          <AdminNav role={session.role} />
           <div className="admin-user">
             <span className="admin-user-name" title={session.email}>
               {session.name}
             </span>
             <form action="/api/auth/logout" method="post" className="logout-form">
               <button type="submit" className="btn btn-ghost btn-sm">
-                Log out
+                تسجيل الخروج
               </button>
             </form>
           </div>

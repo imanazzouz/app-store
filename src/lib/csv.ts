@@ -16,10 +16,12 @@ export function toCsv(
   return `${head}${body ? `\r\n${body}` : ''}`;
 }
 
-/** ISO date → "2026-11-17 14:03" (UTC-safe, sortable). */
+/** Format timestamps in the app's Arabic-Algerian locale. */
 export function formatDate(value: unknown): string {
   const d = new Date(String(value));
   if (Number.isNaN(d.getTime())) return '';
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  return new Intl.DateTimeFormat('ar-DZ', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).format(d);
 }

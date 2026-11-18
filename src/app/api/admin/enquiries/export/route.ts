@@ -1,3 +1,4 @@
+import{canManagePropertyOperations}from'@/lib/permissions';
 import { getSession } from '@/lib/session';
 import { listEnquiries } from '@/lib/enquiries';
 import { toCsv, formatDate } from '@/lib/csv';
@@ -6,14 +7,7 @@ import { typeLabels } from '@/lib/validation';
 /** Download all enquiries as a spreadsheet-friendly CSV file. */
 export async function GET(req: Request) {
   const session = await getSession();
-  if (!session) {
-    const accept = req.headers.get('accept') ?? '';
-    if (accept.includes('text/html')) {
-      return Response.redirect(new URL('/admin/login', req.url), 303);
-    }
-    return Response.json({ error: 'Not authenticated.' }, { status: 401 });
-  }
-
+  if(!session)return Response.json({error:'يرجى تسجيل الدخول أولاً.'},{status:401});if(!canManagePropertyOperations(session.role))return Response.json({error:'ليست لديك صلاحية تنفيذ هذه العملية.'},{status:403});
   const enquiries = await listEnquiries();
   const rows = enquiries.map((e) => ({
     received: formatDate(e.created_at),
@@ -22,17 +16,17 @@ export async function GET(req: Request) {
     email: e.email,
     phone: e.phone,
     message: e.message,
-    status: e.status,
+    status: e.status === 'new' ? 'جديد' : e.status === 'contacted' ? 'تم التواصل' : 'مغلق',
   }));
 
   const csv = toCsv(rows, [
-    { key: 'received', label: 'Received' },
-    { key: 'property', label: 'Property' },
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'message', label: 'Message' },
-    { key: 'status', label: 'Status' },
+    { key: 'received', label: 'تاريخ الاستلام' },
+    { key: 'property', label: 'العقار' },
+    { key: 'name', label: 'الاسم' },
+    { key: 'email', label: 'البريد الإلكتروني' },
+    { key: 'phone', label: 'الهاتف' },
+    { key: 'message', label: 'الرسالة' },
+    { key: 'status', label: 'الحالة' },
   ]);
 
   const stamp = new Date().toISOString().slice(0, 10);

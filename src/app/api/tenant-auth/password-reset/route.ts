@@ -1,0 +1,2 @@
+import{NextResponse}from'next/server';import{tenantAuthRequestSchema}from'@/lib/validation';import{getClientIp,requestPasswordReset}from'@/lib/tenant-auth-flows';
+export async function POST(req:Request){const generic={ok:true,message:'إذا كان البريد مرتبطاً بحساب نشط، فستصل إليه تعليمات الاستعادة.'};try{const body=await req.json();const p=tenantAuthRequestSchema.safeParse(body);if(!p.success)return NextResponse.json(generic);await requestPasswordReset(p.data.email,getClientIp(req));return NextResponse.json(generic)}catch{return NextResponse.json(generic)}}
