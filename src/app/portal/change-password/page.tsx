@@ -1,0 +1,1 @@
+import{TenantPasswordForm}from'@/components/tenant-portal-forms';export default function TenantPasswordPage(){return <section className="portal-card"><p className="eyebrow dark">إجراء أمني مطلوب</p><h1>غيّر كلمة المرور المؤقتة</h1><p className="admin-sub">لن تتمكن من عرض بياناتك حتى تعيين كلمة مرور جديدة.</p><div style={{height:20}}/><TenantPasswordForm/></section>}

@@ -3,7 +3,7 @@ import type { Listing } from '@/lib/listings';
 import { typeLabels } from '@/lib/validation';
 
 export function formatPrice(price: number): string {
-  return price.toLocaleString('en-US');
+  return new Intl.NumberFormat('ar-DZ', { maximumFractionDigits: 0 }).format(price);
 }
 
 export default function PropertyCard({ listing }: { listing: Listing }) {
@@ -19,7 +19,7 @@ export default function PropertyCard({ listing }: { listing: Listing }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={cover} alt={listing.title} loading="lazy" width={640} height={420} />
         <span className={`pill ${leased ? 'pill-leased' : 'pill-available'}`}>
-          {leased ? 'Leased' : 'Available'}
+          {leased ? 'مؤجّر' : 'متاح'}
         </span>
         <span className="type-tag">{typeLabels[listing.type]}</span>
       </div>
@@ -28,20 +28,20 @@ export default function PropertyCard({ listing }: { listing: Listing }) {
         <p className="card-meta">
           {listing.city}
           <span aria-hidden="true">·</span>
-          {listing.area_sqm.toLocaleString('en-US')} m²
+          {listing.area_sqm.toLocaleString('ar-DZ')} m²
           {listing.beds ? (
             <>
               <span aria-hidden="true">·</span>
-              {listing.beds} bed
+              {listing.beds} غرف
             </>
           ) : null}
         </p>
         <div className="card-foot">
           <span className="price">
-            ${formatPrice(listing.price)}
-            <small>/mo</small>
+            {formatPrice(listing.price)} دج
+            <small>/شهرياً</small>
           </span>
-          <span className="card-cta">View details →</span>
+          <span className="card-cta">عرض التفاصيل ←</span>
         </div>
       </div>
     </Link>

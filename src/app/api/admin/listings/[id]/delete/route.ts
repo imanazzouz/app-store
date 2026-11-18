@@ -1,10 +1,13 @@
+import{canManagePropertyOperations}from'@/lib/permissions';
 import { NextResponse } from 'next/server';
 import { getSession, originAllowed } from '@/lib/session';
 import { deleteListing } from '@/lib/listings';
 
 /** Form-friendly delete (works without JavaScript). */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await getSession())) {
+  const session=await getSession();
+  if(!session)return NextResponse.json({error:'يرجى تسجيل الدخول أولاً.'},{status:401});if(!canManagePropertyOperations(session.role))return NextResponse.json({error:'ليست لديك صلاحية تنفيذ هذه العملية.'},{status:403});
+  if (!session) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
   if (!originAllowed(req)) {

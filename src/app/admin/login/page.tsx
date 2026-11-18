@@ -9,6 +9,7 @@ export default function AdminLoginPage() {
   const params = useSearchParams();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [showPassword,setShowPassword]=useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,15 +29,16 @@ export default function AdminLoginPage() {
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(json.error || 'Login failed.');
+        setError(json.error || 'فشل تسجيل الدخول.');
         setBusy(false);
         return;
       }
       const next = params.get('next');
-      router.replace(next && next.startsWith('/') ? next : '/admin');
+      const safeNext=next&&next.startsWith('/')&&!next.startsWith('//')&&!next.includes('\\')?next:'/admin';
+      router.replace(safeNext);
       router.refresh();
     } catch {
-      setError('Network error — please try again.');
+      setError('تعذر الاتصال بالشبكة، حاول مجدداً.');
       setBusy(false);
     }
   }
@@ -50,16 +52,16 @@ export default function AdminLoginPage() {
             <span className="brand-name">
               ATLAS <b>REIT</b>
             </span>
-            <p>Staff dashboard</p>
+            <p>لوحة الموظفين</p>
           </div>
         </div>
 
-        <h1>Welcome back</h1>
-        <p className="login-sub">Sign in to manage listings and enquiries.</p>
+        <h1>مرحباً بعودتك</h1>
+        <p className="login-sub">سجّل الدخول لإدارة العقارات واستفسارات العملاء.</p>
 
         <form onSubmit={onSubmit} className="login-form">
           <label className="field">
-            <span>Email</span>
+            <span>البريد الإلكتروني</span>
             <input
               type="email"
               name="email"
@@ -70,14 +72,14 @@ export default function AdminLoginPage() {
             />
           </label>
           <label className="field">
-            <span>Password</span>
-            <input
-              type="password"
+            <span>كلمة المرور</span>
+            <div className="password-input-row"><input
+              type={showPassword?'text':'password'}
               name="password"
               required
               autoComplete="current-password"
-              placeholder="••••••••"
-            />
+              placeholder="أدخل كلمة المرور"
+            /><button type="button" className="btn btn-ghost btn-xs" onClick={()=>setShowPassword(value=>!value)} aria-label={showPassword?'إخفاء كلمة المرور':'إظهار كلمة المرور'}>{showPassword?'إخفاء':'إظهار'}</button></div>
           </label>
 
           {error && (
@@ -87,13 +89,12 @@ export default function AdminLoginPage() {
           )}
 
           <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
-            {busy ? 'Signing in…' : 'Sign in'}
+            {busy ? 'جارٍ تسجيل الدخول…' : 'تسجيل الدخول'}
           </button>
         </form>
 
         <p className="login-help">
-          Forgot your password? Ask an administrator to reset it from
-          Settings → Team accounts.
+          هل نسيت كلمة المرور؟ اطلب من المدير إعادة تعيينها من الإعدادات ← حسابات الفريق.
         </p>
       </div>
     </div>

@@ -1,0 +1,1 @@
+import{NextResponse}from'next/server';import{destroyTenantSession}from'@/lib/tenant-session';import{originAllowed}from'@/lib/session';export async function POST(req:Request){if(!originAllowed(req))return NextResponse.json({error:'مصدر الطلب غير صالح.'},{status:403});await destroyTenantSession();return NextResponse.json({ok:true})}

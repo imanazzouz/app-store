@@ -1,0 +1,2 @@
+import Link from'next/link';import{TenantRegistrationForm}from'@/components/tenant-portal-forms';
+export default function TenantRegisterPage(){return <section className="portal-card"><p className="eyebrow dark">ATLAS REIT</p><h1>إنشاء حساب مستأجر</h1><p className="admin-sub">أكّد بريدك برمز يُرسل إليك، ثم تابع إلى بوابتك. إذا كان البريد مرتبطاً بعقد موجود فسيُربط الحساب بذلك السجل بعد التحقق.</p><div style={{height:20}}/><TenantRegistrationForm/><p className="field-hint"><Link href="/portal/login">لديك حساب؟ سجّل الدخول</Link></p></section>}

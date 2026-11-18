@@ -14,9 +14,9 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props) {
   const id = Number((await params).id);
   const listing = Number.isInteger(id) ? await getListing(id) : null;
-  if (!listing) return { title: 'Property not found' };
+  if (!listing) return { title: 'العقار غير موجود' };
   return {
-    title: `${listing.title} — ${formatPrice(listing.price)}/mo`,
+    title: `${listing.title} — ${formatPrice(listing.price)} دج شهرياً`,
     description: listing.description.slice(0, 180),
   };
 }
@@ -37,10 +37,10 @@ export default async function PropertyDetailPage({ params }: Props) {
     <div className="page detail-page">
       <section className="page-head compact">
         <div className="container">
-          <nav className="breadcrumbs" aria-label="Breadcrumb">
-            <Link href="/">Home</Link>
+          <nav className="breadcrumbs" aria-label="مسار الصفحة">
+            <Link href="/">الرئيسية</Link>
             <span aria-hidden="true">/</span>
-            <Link href="/properties">Portfolio</Link>
+            <Link href="/properties">العقارات</Link>
             <span aria-hidden="true">/</span>
             <span aria-current="page">{listing.title}</span>
           </nav>
@@ -61,7 +61,7 @@ export default async function PropertyDetailPage({ params }: Props) {
                 </p>
               </div>
               <span className={`pill big ${leased ? 'pill-leased' : 'pill-available'}`}>
-                {leased ? 'Leased' : 'Available now'}
+                {leased ? 'مؤجّر' : 'متاح الآن'}
               </span>
             </div>
 
@@ -69,43 +69,43 @@ export default async function PropertyDetailPage({ params }: Props) {
 
             <div className="spec-grid">
               <div className="spec">
-                <span>Rent</span>
+                <span>الإيجار</span>
                 <strong>
-                  ${formatPrice(listing.price)}
-                  <small> / month</small>
+                  {formatPrice(listing.price)} دج
+                  <small> / شهرياً</small>
                 </strong>
               </div>
               <div className="spec">
-                <span>Area</span>
-                <strong>{listing.area_sqm.toLocaleString('en-US')} m²</strong>
+                <span>المساحة</span>
+                <strong>{listing.area_sqm.toLocaleString('ar-DZ')} m²</strong>
               </div>
               {listing.beds !== null && (
                 <div className="spec">
-                  <span>Bedrooms</span>
+                  <span>الغرف</span>
                   <strong>{listing.beds}</strong>
                 </div>
               )}
               <div className="spec">
-                <span>Type</span>
+                <span>النوع</span>
                 <strong>{typeLabels[listing.type]}</strong>
               </div>
               <div className="spec">
-                <span>City</span>
+                <span>المدينة</span>
                 <strong>{listing.city || '—'}</strong>
               </div>
               <div className="spec">
-                <span>Status</span>
-                <strong>{leased ? 'Leased' : 'Available'}</strong>
+                <span>الحالة</span>
+                <strong>{leased ? 'مؤجّر' : 'متاح'}</strong>
               </div>
             </div>
 
             <article className="detail-copy">
-              <h2>About this unit</h2>
+              <h2>عن هذه الوحدة</h2>
               <p>{listing.description}</p>
 
               {listing.features.length > 0 && (
                 <>
-                  <h2>Features & amenities</h2>
+                  <h2>المزايا والتجهيزات</h2>
                   <ul className="feature-list">
                     {listing.features.map((f) => (
                       <li key={f}>{f}</li>
@@ -119,13 +119,12 @@ export default async function PropertyDetailPage({ params }: Props) {
           <aside className="detail-aside">
             {leased ? (
               <div className="enquiry-card leased-note">
-                <h3>This unit is leased</h3>
+                <h3>هذه الوحدة مؤجرة</h3>
                 <p>
-                  A tenant has already taken this unit. Browse our other
-                  available spaces — new units come to market regularly.
+                  تم تأجير هذه الوحدة. تصفح المساحات المتاحة الأخرى، فلدينا وحدات جديدة باستمرار.
                 </p>
                 <Link href={`/properties?type=${listing.type}&available=1`} className="btn btn-primary btn-block">
-                  See available {typeLabels[listing.type].toLowerCase()} units
+                  عرض الوحدات المتاحة
                 </Link>
               </div>
             ) : (
@@ -140,8 +139,8 @@ export default async function PropertyDetailPage({ params }: Props) {
           <div className="container">
             <div className="section-head">
               <div>
-                <p className="eyebrow dark">More like this</p>
-                <h2>Other {typeLabels[listing.type].toLowerCase()} units</h2>
+                <p className="eyebrow dark">عقارات مشابهة</p>
+                <h2>وحدات أخرى من هذا النوع</h2>
               </div>
             </div>
             <div className="card-grid">

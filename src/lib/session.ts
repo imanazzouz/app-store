@@ -1,5 +1,7 @@
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT } from 'jose/jwt/sign';
+import { jwtVerify } from 'jose/jwt/verify';
 import { cookies } from 'next/headers';
+import { query } from './db';
 
 export const SESSION_COOKIE = 'atlas_session';
 const MAX_AGE_SECONDS = 60 * 60 * 12; // 12 hours
@@ -9,6 +11,7 @@ export type Session = {
   email: string;
   name: string;
   role: string;
+  sessionVersion: number;
 };
 
 function secretKey(): Uint8Array {
@@ -26,8 +29,9 @@ export async function createSession(user: {
   email: string;
   name: string;
   role: string;
+  session_version?: number;
 }): Promise<void> {
-  const token = await new SignJWT({ email: user.email, name: user.name, role: user.role })
+  const token = await new SignJWT({ email: user.email, name: user.name, role: user.role, ver: user.session_version ?? 1 })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(String(user.id))
     .setIssuedAt()
@@ -51,12 +55,14 @@ export async function getSession(): Promise<Session | null> {
     if (!token) return null;
     const { payload } = await jwtVerify(token, secretKey());
     if (!payload.sub) return null;
-    return {
-      userId: Number(payload.sub),
-      email: String(payload.email ?? ''),
-      name: String(payload.name ?? ''),
-      role: String(payload.role ?? 'editor'),
-    };
+    const userId=Number(payload.sub);
+    if(!Number.isSafeInteger(userId)||userId<=0)return null;
+    const rows=await query<{id:number;email:string;name:string;role:string;session_version:number;active:boolean}>(
+      'SELECT id,email,name,role,session_version,active FROM users WHERE id=$1',[userId],
+    );
+    const user=rows[0];
+    if(!user||!user.active||Number(payload.ver??1)!==Number(user.session_version))return null;
+    return {userId:Number(user.id),email:user.email,name:user.name,role:user.role,sessionVersion:Number(user.session_version)};
   } catch {
     return null;
   }
@@ -73,7 +79,7 @@ export async function destroySession(): Promise<void> {
  */
 export function originAllowed(request: Request): boolean {
   const origin = request.headers.get('origin');
-  if (!origin) return true; // same-origin form GETs / non-browser clients
+  if (!origin) return false; // fail closed for cookie-authenticated state changes
   try {
     const host =
       request.headers.get('x-forwarded-host') ?? request.headers.get('host');

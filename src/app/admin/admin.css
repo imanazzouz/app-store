@@ -36,13 +36,24 @@
   letter-spacing: 0.08em;
   padding: 3px 8px;
   border-radius: 6px;
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
+
+.password-input-row { display:flex; align-items:center; gap:8px; }
+.password-input-row input { flex:1; min-width:0; }
 
 .admin-nav {
   display: flex;
   gap: 4px;
   flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.admin-nav-link {
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .admin-nav-link {
@@ -68,7 +79,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .admin-user-name {
@@ -309,7 +320,7 @@
 }
 
 .admin-table th {
-  text-align: left;
+  text-align: start;
   font-size: 0.74rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -406,7 +417,7 @@
   letter-spacing: 0.06em;
   padding: 2px 7px;
   border-radius: 6px;
-  margin-left: 8px;
+  margin-inline-start: 8px;
   vertical-align: middle;
 }
 
@@ -554,7 +565,7 @@
 .chip-label {
   position: absolute;
   bottom: 6px;
-  left: 6px;
+  inset-inline-start: 6px;
   background: rgba(13, 31, 51, 0.84);
   color: #fff;
   font-size: 0.68rem;
@@ -566,7 +577,7 @@
 .chip-remove {
   position: absolute;
   top: -8px;
-  right: -8px;
+  inset-inline-end: -8px;
   width: 23px;
   height: 23px;
   border-radius: 50%;
@@ -660,7 +671,7 @@
 
 .info-box ol {
   margin: 0;
-  padding-left: 19px;
+  padding-inline-start: 19px;
   font-size: 0.88rem;
   line-height: 1.9;
   color: #44546a;
@@ -747,7 +758,7 @@
   }
 
   .admin-user {
-    margin-left: auto;
+    margin-inline-start: auto;
   }
 
   .admin-user-name {
@@ -799,7 +810,7 @@
     text-transform: uppercase;
     letter-spacing: 0.07em;
     color: var(--muted);
-    text-align: left;
+    text-align: start;
     flex-shrink: 0;
   }
 
@@ -811,7 +822,7 @@
 
   .admin-table td[data-label='Unit'] > *,
   .admin-table td[data-label='Visitor'] > * {
-    margin-left: auto;
+    margin-inline-start: auto;
   }
 
   .cell-unit {
@@ -819,7 +830,7 @@
   }
 
   .cell-unit > div {
-    text-align: left;
+    text-align: start;
   }
 
   .cell-visitor {

@@ -1,4 +1,4 @@
-import { query } from './db';
+import { query, withTransaction } from './db';
 import type { EnquiryInput } from './validation';
 
 export type Enquiry = {
@@ -33,13 +33,27 @@ const SELECT = `
   LEFT JOIN listings l ON l.id = e.listing_id`;
 
 export async function createEnquiry(input: EnquiryInput): Promise<number> {
-  const rows = await query<{ id: number }>(
-    `INSERT INTO enquiries (listing_id, name, email, phone, message)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING id`,
-    [input.listingId, input.name, input.email, input.phone, input.message],
-  );
-  return Number(rows[0].id);
+  return withTransaction(async (tx) => {
+    const rows = await tx.query<{ id: number; unit_id: number | null }>(
+      `INSERT INTO enquiries (listing_id, name, email, phone, message)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, listing_id`,
+      [input.listingId, input.name, input.email, input.phone, input.message],
+    );
+    const id = Number(rows[0].id);
+    const links = await tx.query<{ unit_id: number | null }>(
+      'SELECT unit_id FROM listings WHERE id = $1', [input.listingId],
+    );
+    const leads = await tx.query<{ id: number }>(
+      `INSERT INTO leads (enquiry_id, listing_id, unit_id, contact_name, email, phone, message, source)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'website') RETURNING id`,
+      [id, input.listingId, links[0]?.unit_id ?? null, input.name, input.email, input.phone, input.message],
+    );
+    await tx.query(
+      `INSERT INTO lead_stage_history (lead_id, new_stage, note)
+       VALUES ($1, 'new', 'استفسار وارد من الموقع')`, [Number(leads[0].id)],
+    );
+    return id;
+  });
 }
 
 export async function listEnquiries(): Promise<Enquiry[]> {
@@ -56,7 +70,19 @@ export async function setEnquiryStatus(
   id: number,
   status: Enquiry['status'],
 ): Promise<void> {
-  await query('UPDATE enquiries SET status = $1 WHERE id = $2', [status, id]);
+  const stage = status === 'closed' ? 'lost' : status;
+  await withTransaction(async (tx) => {
+    await tx.query('UPDATE enquiries SET status = $1 WHERE id = $2', [status, id]);
+    const rows = await tx.query<{ id: number; stage: string }>(
+      'SELECT id, stage FROM leads WHERE enquiry_id = $1 FOR UPDATE', [id],
+    );
+    if (!rows.length || rows[0].stage === stage) return;
+    await tx.query('UPDATE leads SET stage = $1, updated_at = now() WHERE id = $2', [stage, rows[0].id]);
+    await tx.query(
+      `INSERT INTO lead_stage_history (lead_id, old_stage, new_stage, note)
+       VALUES ($1,$2,$3,'تحديث حالة الاستفسار')`, [rows[0].id, rows[0].stage, stage],
+    );
+  });
 }
 
 export async function recentEnquiries(limit = 5): Promise<Enquiry[]> {

@@ -1,0 +1,5 @@
+import{canApproveLeases}from'@/lib/permissions';
+import { NextResponse } from 'next/server';
+import { getSession, originAllowed } from '@/lib/session';
+import { approveLease } from '@/lib/leasing';
+export async function POST(req:Request,{params}:{params:Promise<{id:string}>}){const session=await getSession();if(!session)return NextResponse.json({error:'يرجى تسجيل الدخول أولاً.'},{status:401});if(!canApproveLeases(session.role))return NextResponse.json({error:'ليست لديك صلاحية تنفيذ هذه العملية.'},{status:403});if(!session)return NextResponse.json({error:'يرجى تسجيل الدخول أولاً.'},{status:401});if(!originAllowed(req))return NextResponse.json({error:'مصدر الطلب غير صالح.'},{status:403});const id=Number((await params).id);if(!Number.isInteger(id)||id<=0)return NextResponse.json({error:'رقم العقد غير صالح.'},{status:400});try{const ok=await approveLease(id,session.userId);return ok?NextResponse.json({ok:true}):NextResponse.json({error:'العقد غير موجود.'},{status:404})}catch(e){return NextResponse.json({error:e instanceof Error?e.message:'تعذر اعتماد العقد.'},{status:400})}}

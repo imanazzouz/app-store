@@ -14,7 +14,7 @@ export default function FilterBar({ counts, active = 'all', availableOnly }: Pro
     (counts.commercial ?? 0) + (counts.residential ?? 0) + (counts.warehouse ?? 0);
 
   const chips: { key: Active; label: string; n: number }[] = [
-    { key: 'all', label: 'All', n: total },
+    { key: 'all', label: 'الكل', n: total },
     ...propertyTypes.map((t) => ({ key: t as Active, label: typeLabels[t], n: counts[t] ?? 0 })),
   ];
 
@@ -28,7 +28,7 @@ export default function FilterBar({ counts, active = 'all', availableOnly }: Pro
 
   return (
     <div className="filter-bar">
-      <div className="filter-chips" role="group" aria-label="Filter by property type">
+      <div className="filter-chips" role="group" aria-label="تصفية حسب نوع العقار">
         {chips.map((chip) => (
           <Link
             key={chip.key}
@@ -47,7 +47,7 @@ export default function FilterBar({ counts, active = 'all', availableOnly }: Pro
         className={`chip chip-toggle${availableOnly ? ' chip-active' : ''}`}
         aria-pressed={availableOnly}
       >
-        {availableOnly ? '✓ ' : ''}Available only
+        {availableOnly ? '✓ ' : ''}المتاحة فقط
       </Link>
     </div>
   );

@@ -10,10 +10,10 @@ export default function AdminListingsTable({ listings }: { listings: Listing[] }
   if (!listings.length) {
     return (
       <div className="panel empty-state">
-        <h2>No listings yet</h2>
-        <p>Add your first unit — photos, price, availability and all.</p>
+        <h2>لا توجد إعلانات بعد</h2>
+        <p>أضف أول وحدة مع صورها وسعرها وحالة توفرها.</p>
         <Link href="/admin/listings/new" className="btn btn-primary">
-          Create a listing
+          إنشاء إعلان
         </Link>
       </div>
     );
@@ -24,13 +24,13 @@ export default function AdminListingsTable({ listings }: { listings: Listing[] }
       <table className="admin-table">
         <thead>
           <tr>
-            <th scope="col">Unit</th>
-            <th scope="col">Type</th>
-            <th scope="col">Rent / month</th>
-            <th scope="col">Status</th>
-            <th scope="col">Updated</th>
+            <th scope="col">الوحدة</th>
+            <th scope="col">النوع</th>
+            <th scope="col">الإيجار / شهرياً</th>
+            <th scope="col">الحالة</th>
+            <th scope="col">آخر تحديث</th>
             <th scope="col" className="col-actions">
-              Actions
+              الإجراءات
             </th>
           </tr>
         </thead>
@@ -39,7 +39,7 @@ export default function AdminListingsTable({ listings }: { listings: Listing[] }
             const leased = l.status === 'leased';
             return (
               <tr key={l.id} className={leased ? 'row-leased' : undefined}>
-                <td data-label="Unit">
+                <td data-label="الوحدة">
                   <div className="cell-unit">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -54,21 +54,21 @@ export default function AdminListingsTable({ listings }: { listings: Listing[] }
                         {l.title}
                       </Link>
                       <span className="cell-sub">
-                        {l.city} · {l.area_sqm.toLocaleString('en-US')} m²
+                        {l.city} · {l.area_sqm.toLocaleString('ar-DZ')} m²
                       </span>
                     </div>
                   </div>
                 </td>
-                <td data-label="Type">{typeLabels[l.type]}</td>
-                <td data-label="Rent / month">${formatPrice(l.price)}</td>
-                <td data-label="Status">
-                  <span className={`status-pill s-${l.status}`}>{l.status}</span>
+                <td data-label="النوع">{typeLabels[l.type]}</td>
+                <td data-label="الإيجار / شهرياً">{formatPrice(l.price)} دج</td>
+                <td data-label="الحالة">
+                  <span className={`status-pill s-${l.status}`}>{leased ? 'مؤجرة' : 'متاحة'}</span>
                 </td>
-                <td data-label="Updated">{formatDate(l.updated_at)}</td>
-                <td data-label="Actions" className="col-actions">
+                <td data-label="آخر تحديث">{formatDate(l.updated_at)}</td>
+                <td data-label="الإجراءات" className="col-actions">
                   <div className="row-actions">
                     <Link href={`/admin/listings/${l.id}/edit`} className="btn btn-outline btn-xs">
-                      Edit
+                      تعديل
                     </Link>
                     <form action={`/api/admin/listings/${l.id}/status`} method="post">
                       <input type="hidden" name="status" value={leased ? 'available' : 'leased'} />
@@ -76,20 +76,20 @@ export default function AdminListingsTable({ listings }: { listings: Listing[] }
                         type="submit"
                         className={`btn btn-xs ${leased ? 'btn-outline' : 'btn-warn'}`}
                       >
-                        {leased ? 'Mark available' : 'Mark leased'}
+                        {leased ? 'تحديد كمتاحة' : 'تحديد كمؤجرة'}
                       </button>
                     </form>
                     <form
                       action={`/api/admin/listings/${l.id}/delete`}
                       method="post"
                       onSubmit={(e) => {
-                        if (!confirm(`Delete “${l.title}”? This cannot be undone.`)) {
+                        if (!confirm(`هل تريد حذف «${l.title}»؟ لا يمكن التراجع عن هذا الإجراء.`)) {
                           e.preventDefault();
                         }
                       }}
                     >
                       <button type="submit" className="btn btn-ghost btn-xs danger">
-                        Delete
+                        حذف
                       </button>
                     </form>
                   </div>

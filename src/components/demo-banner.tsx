@@ -8,9 +8,8 @@ export default function DemoBanner() {
   if (!isEphemeralDb()) return null;
   return (
     <div className="demo-banner" role="status">
-      <strong>Preview environment</strong> — no database is connected yet, so
-      listings and enquiries are temporary. Attach Postgres (Neon) in Vercel →
-      Marketplace to persist data. See <code>docs/HANDOFF.md</code>.
+      <strong>بيئة تجريبية</strong> — لا توجد قاعدة بيانات متصلة، لذلك
+      الإعلانات والاستفسارات مؤقتة. اربط قاعدة PostgreSQL من لوحة Vercel لحفظ البيانات. راجع <code>docs/HANDOFF.md</code>.
     </div>
   );
 }

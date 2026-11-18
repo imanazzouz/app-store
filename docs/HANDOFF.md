@@ -8,6 +8,8 @@
 
 ## 1. What this site does
 
+The current interface is Arabic (RTL), and rental prices are denominated in Algerian dinars (DZD / دج).
+
 | | |
 |---|---|
 | **Public site** | Showcases the rental portfolio. Visitors filter by **Commercial / Residential / Warehouse**, open a unit, and send a short enquiry. |
@@ -29,19 +31,23 @@
 2. Enter your email + password.
 3. You stay signed in for **12 hours**; after that, simply log in again.
 
-> 🔒 After 5 wrong passwords the form locks for 60 seconds — wait a minute and
-> try again, or ask an admin to reset your password.
+> 🔒 Six failed attempts for an account or IP trigger a persistent 10-minute
+> lockout. New and changed staff passwords require at least 12 characters with
+> uppercase, lowercase and a number. Sessions use HttpOnly/SameSite cookies;
+> changing a password or disabling an account revokes its other sessions.
 
 ### Accounts & roles
 
-| Role | Can do |
+| Role | Initial permissions (enforced by server routes) |
 |---|---|
-| **Editor** | Add/edit listings, mark leased, handle enquiries, change own password |
-| **Admin** | Everything above **+ create/remove team accounts** |
+| **موظف عقاري** | العقارات والوحدات والعملاء والزيارات وطلبات العقود والصيانة |
+| **مدير العقارات** | عمليات العقارات واعتماد العقود والإنهاء واقتطاعات الضمان وأوامر العمل |
+| **محاسب** | تسجيل الدفعات والمصروفات والضمانات وطلب تسوية/رد الدفعات |
+| **المدير العام** | إعدادات الموقع والأدوار واعتماد التسويات المالية والعمليات الحساسة |
+| **مدير النظام** | صلاحيات كاملة وإدارة حسابات الفريق |
+| **محرر (قديم)** | دور توافق انتقالي للحسابات القديمة؛ يُنقل إلى الدور المحدد عند مراجعة الحساب |
 
-The first administrator is created automatically on first run
-(`ADMIN_EMAIL` in the environment). Change that password immediately after
-first login (**Settings → Change my password**).
+The first administrator is created only when `ADMIN_EMAIL` and a strong `ADMIN_PASSWORD` are provided in the environment. There is no hard-coded default password; change the initial password after first login.
 
 ---
 
@@ -54,7 +60,7 @@ first login (**Settings → Change my password**).
    - **Title** — e.g. `Hydra Business Center — Floor 4`
    - **Property type** — Commercial / Residential / Warehouse
    - **Status** — leave as *Available*
-   - **Rent per month (USD)** and **Area (m²)** — numbers only
+   - **Rent per month (DZD)** and **Area (m²)** — numbers only
    - **Bedrooms** — residential units only (leave blank otherwise)
    - **City / Address / Description** — description needs ≥ 20 characters
    - **Features** — one per line; they appear as bullet points on the unit page
@@ -100,10 +106,114 @@ In **Listings**, one click per row:
 
 - *Add a team member*: name, email, temporary password (≥ 8 chars), role.
   Hand the credentials over in person and tell them to change it.
-- *Remove*: instantly revokes access. You cannot remove your own account or
-  the last administrator.
+- *Disable account*: preserves the account history and immediately revokes
+  active sessions. You cannot disable your own account or the last active admin.
 - Forgotten password? An admin removes the account and re-creates it with a
   new temporary password.
+
+### 3.6 Properties, units, owners and portfolios
+
+Use **Properties**, **Units**, **Owners** and **Portfolios** in the dashboard.
+Create owners/portfolios first if you want to link them to a property; add units
+under a property. Existing public listings retain their IDs and are bridged to
+one property and one unit. Do not delete a legacy listing to archive an asset:
+financial records and signed agreements should remain intact.
+
+### 3.7 CRM and visits
+
+**Leads** contains new website enquiries and manually entered prospects. Use
+stage changes to track follow-up; the system records the stage history. **Visits**
+lets staff schedule property viewings and prevents the same unit or staff member
+from being double-booked at the same time.
+
+### 3.8 Tenants, leases and rent collection
+
+1. Add the tenant under **Tenants**.
+2. Create a lease under **Leases**, selecting a unit and primary tenant; it is
+   immediately submitted for approval.
+3. An administrator reviews and **approves** the lease. Only an approved lease
+   can be activated. Activation checks date overlap, marks the unit leased, and
+   creates scheduled rent invoices (plus a deposit line on the initial invoice
+   when a deposit is specified).
+4. Under **Invoices**, review balances and due dates. Under **Payments**, record
+   a payment and allocate its full amount across one or more open invoices. The
+   same invoice cannot be overpaid by concurrent payment submissions.
+
+This is an initial operational workflow, not a jurisdiction-ready lease-signing
+or accounting system. It does not generate signed legal documents, track bank
+reconciliation, or replace professional accounting. Validate invoice periods,
+tax treatment, deposit handling and contract clauses with the business before
+using real transactions.
+
+### 3.9 Expenses, maintenance and reports
+
+Use **Expenses** to register a DZD expense against a property/unit. Use
+**Maintenance** to log a unit issue, set priority, and move it through its
+allowed status transitions. Add vendors and create work orders there; approval
+is restricted to administrators. Completing a work order creates an unpaid
+maintenance expense for its final cost. **Reports** summarizes occupancy,
+invoice collection, overdue balances, leases nearing end, leads and expenses;
+treat these as operational indicators and reconcile against source records.
+Administrators can review recorded changes under **Audit log**.
+
+### 3.10 DZD prices, USD conversion and contact details
+
+All property prices and recorded financial values remain in **Algerian dinars
+(DZD / دج)**. At **Settings → Site contact and exchange rate**, an administrator
+may set the DZD value for one USD and add email, phone, WhatsApp, address, and
+social/site links. Empty contact fields stay hidden in the public footer. No
+exchange rate is assumed or fetched automatically; the public calculator uses
+the manually configured rate and is indicative only. The seeded portfolio
+prices are illustrative demo data, not offers or market valuations.
+
+---
+
+### 3.11 بوابة المستأجر
+
+يمكن للمستأجر إنشاء حساب من `/portal/register` بالاسم والبريد وكلمة المرور، ثم
+تأكيد ملكية البريد برمز من ٦ أرقام ينتهي خلال مدة محددة. إذا طابق البريد سجلاً
+واحداً لمستأجر قائم، يربط الحساب به بعد التحقق ولا ينشئ سجلاً مكرراً؛ أما البريد
+الجديد فينشئ ملف مستأجر بلا عقد إلى أن تربطه الإدارة. لا يسمح التسجيل بإعادة
+تفعيل حساب عطّلته الإدارة. يمكن أيضاً تسجيل الدخول اختيارياً عبر Google بحساب
+بريده مؤكّد، وهو متاح لبوابة المستأجر فقط وليس لحسابات الموظفين.
+
+من **Tenants** يمكن للإدارة إرسال دعوة إلى البريد المسجل؛ لا تعرض الواجهة كلمة
+مرور مؤقتة. تعمل الدعوة ورابط الاستعادة كرموز عشوائية أحادية الاستخدام ومنتهية
+الصلاحية. استعادة كلمة المرور من `/portal/forgot-password` ترسل رابطاً عاماً لا
+يكشف وجود الحساب. تعرض البوابة عقود المستأجر وفواتيره وإيصالاته وأرصدة دائنة
+منفصلة، وتسمح ببلاغ صيانة لوحدة مرتبطة بعقد نشط. لا يوجد دفع إلكتروني أو مقاصة
+تلقائية للأرصدة.
+
+**إعداد البريد:** يلزم `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`,
+و`APP_BASE_URL` عام وآمن (`https` في الإنتاج). رمز التسجيل يضبط عبر
+`TENANT_REGISTRATION_CODE_TTL_MINUTES`. لتفعيل Google، عيّن
+`GOOGLE_CLIENT_ID` و`GOOGLE_CLIENT_SECRET`، وأضف عنوان callback المحدد في README
+إلى Google Cloud Console. الاختبارات تستخدم مزوداً تجريبياً لا يرسل رسائل حقيقية.
+لا تضع بيانات اعتماد البريد أو Google في Git.
+
+### 3.12 تجديد وإنهاء العقد والضمان
+
+من **Leases** تُراجع العقود القريبة من الانتهاء وطلبات التجديد أو الإنهاء. يراجع
+المدير المدة/الإيجار الجديدين أو تاريخ الإنهاء والاستثناء التعاقدي؛ يُحفظ العقد
+السابق ولا يسمح بتداخل فترات الوحدة. طلب المنشئ لا يعتمد من المنشئ نفسه. الإنهاء
+يحسب الإيجار للفترة الحالية على الأيام الفعلية، ويعامل يوم النفاذ كأول يوم غير
+مشغول، ويحفظ الفواتير الصادرة ويسجل الرصيد الدائن أو التعديل بدلاً من حذفها؛ لا
+تفرض غرامة تلقائية.
+
+في **Deposits** يسجل المحاسب قبض الضمان وطلب الاقتطاع مع السبب والمستندات، ثم
+يعتمده مستخدم مخول آخر. تسجل المبالغ المرتجعة كلياً أو جزئياً مع منع تجاوز الرصيد.
+في **Payments** يطلب الموظف رد/إلغاء الدفعة، ويعتمدها شخص مخول آخر. هذه العمليات
+تظل قيوداً منفصلة ومدققة، وليست حذفاً للسجلات السابقة.
+
+### 3.13 تنبيهات العقود
+
+تظهر تنبيهات 90/60/30 يوماً في لوحة الإدارة، ويمنع السجل تكرار التنبيه نفسه.
+تُشغّل المهمة اليومية عبر Vercel Cron وتتطلب `CRON_SECRET`. البريد الخاص بالتنبيهات
+غير مفعل حالياً.
+
+**إعداد البريد:** يلزم `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`,
+و`APP_BASE_URL` عام وآمن (`https` في الإنتاج). الاختبارات تستخدم مزوداً تجريبياً
+لا يرسل أي رسالة حقيقية. لا تضع بيانات اعتماد البريد في Git.
 
 ---
 
@@ -163,8 +273,11 @@ npm run start      # serve production build
 | File | Purpose |
 |---|---|
 | `src/lib/db.ts` | Driver selection (Neon vs PGlite) + shared `query()` |
-| `src/lib/migrate.ts` | Schema (users, listings, enquiries) |
+| `src/lib/migrate.ts` | Idempotent schema for listings, assets, CRM, leases, finance, maintenance and audit logs |
 | `src/lib/seed.ts` | Demo portfolio + first admin |
+| `src/lib/assets.ts`, `src/lib/crm.ts` | Property/unit and lead/visit queries |
+| `src/lib/leasing.ts`, `src/lib/finance.ts` | Lease workflow, invoice schedule, payment allocation |
+| `src/lib/operations.ts` | Maintenance, expense and operational audit records |
 | `src/lib/session.ts` | JWT sign/verify, cookies, origin check |
 | `src/middleware.ts` | Edge guard for `/admin` and `/api/admin` |
 | `src/app/api/**` | All endpoints (auth, enquiries, CRUD, CSV, upload) |
@@ -176,46 +289,56 @@ npm run start      # serve production build
 |---|---|---|
 | `AUTH_SECRET` | ✅ prod + dev | Signs session tokens — `openssl rand -hex 32`. Rotating it logs everyone out (safe way to force re-login). |
 | `POSTGRES_URL` | ✅ prod | Injected automatically when you attach Neon in Vercel. |
+| `LEGACY_LISTINGS_CURRENCY` | Existing DB only | Set `USD` or `DZD` before first upgraded startup. If USD, also set the approved `LEGACY_LISTINGS_USD_TO_DZD_RATE`; otherwise the migration fails closed rather than mislabeling existing prices. |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME` | first run | Seeds the initial admin only if no user with that email exists. |
 | `BLOB_READ_WRITE_TOKEN` | optional | Enables photo uploads in production (attach a Blob store). |
 | `NEXT_PUBLIC_SITE_URL` | optional | Canonical URL for sitemap/OG metadata. |
+| `EMAIL_PROVIDER`, `RESEND_API_KEY`, `EMAIL_FROM`, `APP_BASE_URL` | tenant email | Required to send account invitations, resets and verification codes. Use HTTPS `APP_BASE_URL` in production; no credentials are committed. |
+| `TENANT_INVITE_TTL_MINUTES`, `TENANT_RESET_TTL_MINUTES`, `TENANT_REGISTRATION_CODE_TTL_MINUTES` | optional | Expiration windows for invite/reset links and the six-digit registration code. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | optional | Enables Google OpenID Connect for tenant portal only; configure callback `/api/tenant-auth/google/callback` in Google Cloud Console. |
+| `CRON_SECRET` | Vercel Cron | Protects the scheduled lease reminder endpoint. |
+| `PGSSL_CA` | optional | PEM CA for private PostgreSQL installations; normal TLS certificate verification remains enabled. |
+| `ATLAS_TEST_POSTGRES_URL` | tests only | Disposable PostgreSQL database named with `test` or `ci`; never point to production. |
 
 ### API surface (all JSON unless noted)
 
-| Endpoint | Method | Auth |
-|---|---|---|
-| `/api/auth/login` · `/api/auth/logout` | POST | public / session |
-| `/api/enquiries` | POST | public (throttled) |
-| `/api/admin/listings` | POST | session |
-| `/api/admin/listings/[id]` | PATCH, DELETE | session |
-| `/api/admin/listings/[id]/status` · `/delete` | POST (form) | session |
-| `/api/admin/enquiries/[id]/status` | POST (form) | session |
-| `/api/admin/enquiries/export` | GET → CSV | session |
-| `/api/admin/upload` | POST (multipart) | session |
-| `/api/admin/password` | POST | session |
-| `/api/admin/users` · `/api/admin/users/[id]` | POST | admin |
+Admin route handlers resolve the current staff session against the database (a valid but revoked JWT is not sufficient), then apply role checks; state-changing requests check Origin. Approval and financial operations require a separate authorized approver where applicable.
+
+| Endpoint family | Methods / purpose |
+|---|---|
+| `/api/auth/*`, `/api/enquiries` | Login/logout; public enquiry submission |
+| `/api/admin/listings/*`, `/api/admin/properties`, `/api/admin/units` | Listings and normalized assets |
+| `/api/admin/owners`, `/api/admin/portfolios` | Owner and portfolio records |
+| `/api/admin/leads`, `/api/admin/leads/[id]/stage`, `/api/admin/visits` | CRM and viewing schedules |
+| `/api/admin/tenants`, `/api/admin/tenants/[id]/portal-access`, `/api/admin/leases` | Tenant records, email invitations, and lease creation |
+| `/api/tenant-auth/*`, `/api/tenant/*` | Tenant login/logout/password and tenant-scoped portal data/maintenance |
+| `/api/admin/leases/[id]/approve`, `/activate`, `/renewals`, `/termination`, `/api/admin/lease-renewals/*`, `/api/admin/lease-terminations/*` | Lease approval, activation, renewal and termination workflow |
+| `/api/admin/payments`, `/api/admin/payments/[id]/reversals`, `/api/admin/payment-reversals/*`, `/api/admin/expenses` | Payments, allocated receipts, separate refund/void approval, and expense entry |
+| `/api/admin/deposits/*`, `/api/admin/deposit-deductions/*` | Security-deposit receipts, deductions and refunds |
+| `/api/admin/maintenance/*`, `/api/admin/vendors`, `/api/admin/work-orders/*` | Maintenance issues, vendors and work orders |
+| `/api/admin/enquiries/*`, `/api/admin/upload`, `/api/admin/password`, `/api/admin/users/*` | Enquiries, CSV, uploads, password and staff management |
 
 ### Scaling notes
 
 - Stateless JWT sessions → any number of serverless instances, no sticky state.
 - DB is the only shared state; PGlite is dev-only, so `npm run build` output
   runs anywhere Next.js runs.
-- Rate limits/login throttles are per-instance by design (defence in depth);
-  add Vercel WAF rules if traffic demands it.
+- Staff login failures and tenant invitation/reset request limits use shared database buckets. Public enquiry spam throttling remains per-instance (8/min/IP); add platform WAF/rate limiting for a multi-instance deployment.
 - To go bigger later: swap `pg` pool size, add read replicas, or move
   enquiries to an email webhook — the data layer is one file (`src/lib`).
 
 ---
 
-## 7. Launch checklist
+## 7. Pre-release gates — not yet completed
 
-- [ ] Change the seeded admin password after first login
-- [ ] Add the rest of the team (Settings → Team accounts)
-- [ ] Attach Neon (Postgres) to the Vercel project
-- [ ] Set `AUTH_SECRET` in Vercel → Settings → Environment Variables
-- [ ] Attach a Blob store if you want photo uploads in production
-- [ ] Replace seed listings/photos with the real portfolio
-- [ ] Update footer contact details (`src/components/site-footer.tsx`)
-- [ ] Attach a custom domain (Vercel → Project → Domains) and set
-      `NEXT_PUBLIC_SITE_URL`
-- [ ] Send one test enquiry end-to-end and confirm it lands in the dashboard
+These steps require an explicitly approved staging environment and qualified reviewers. No production deployment or production database migration has been performed.
+
+- [ ] Run `npm run test:postgres` with `ATLAS_TEST_POSTGRES_URL` pointing only to a disposable PostgreSQL database whose name contains `test` or `ci`; inspect migration and transaction behavior.
+- [ ] Complete browser E2E across staff login/roles, tenant invite/reset, lease renewal/termination, deposits, payments, alerts, and responsive RTL.
+- [ ] Complete independent role-by-role/API/page authorization and tenant-isolation review, including upload/document access.
+- [ ] Validate database backup, restore, migration rollback and preserved legacy currency/data on a staging copy.
+- [ ] Approve lease wording, proration, deposits, fees/taxes, retention and approval policy with local legal/accounting operators.
+- [ ] Configure production secrets/email/Cron and any storage only through the deployment's secure environment; test delivery using a non-production recipient.
+- [ ] Reconcile seeded/demo data and replace it only after an owner-approved data migration plan.
+
+Passing the local PGlite suite and build is not a release approval. Do not check these gates as complete based solely on this local worktree.

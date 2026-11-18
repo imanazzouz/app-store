@@ -1,48 +1,7 @@
-import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
-import { getSession, originAllowed } from '@/lib/session';
-
-/** Remove a staff account (admins only; never removes yourself). */
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
-  }
-  if (session.role !== 'admin') {
-    return NextResponse.json(
-      { error: 'Only administrators can manage accounts.' },
-      { status: 403 },
-    );
-  }
-  if (!originAllowed(req)) {
-    return NextResponse.json({ error: 'Invalid request origin.' }, { status: 403 });
-  }
-
-  const id = Number((await params).id);
-  if (!Number.isInteger(id) || id <= 0) {
-    return NextResponse.json({ error: 'Invalid user id.' }, { status: 400 });
-  }
-  if (id === session.userId) {
-    return NextResponse.json(
-      { error: 'You cannot remove your own account.' },
-      { status: 400 },
-    );
-  }
-
-  const admins = await query<{ n: number }>(
-    "SELECT COUNT(*)::int AS n FROM users WHERE role = 'admin'",
-  );
-  const target = await query<{ role: string }>('SELECT role FROM users WHERE id = $1', [id]);
-  if (!target.length) {
-    return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
-  }
-  if (target[0].role === 'admin' && Number(admins[0].n) <= 1) {
-    return NextResponse.json(
-      { error: 'This is the last administrator — create another admin first.' },
-      { status: 400 },
-    );
-  }
-
-  await query('DELETE FROM users WHERE id = $1', [id]);
-  return NextResponse.json({ ok: true });
-}
+import{canManageRoles}from'@/lib/permissions';
+import{NextResponse}from'next/server';import{query}from'@/lib/db';import{getSession,originAllowed}from'@/lib/session';import{userRoleSchema}from'@/lib/validation';
+async function manager(req:Request){const session=await getSession();if(!session)return{error:NextResponse.json({error:'يرجى تسجيل الدخول أولاً.'},{status:401})};if(!canManageRoles(session.role))return{error:NextResponse.json({error:'ليست لديك صلاحية إدارة الحسابات.'},{status:403})};if(!originAllowed(req))return{error:NextResponse.json({error:'مصدر الطلب غير صالح.'},{status:403})};return{session}}
+/** Disable a staff account without deleting its history. */
+export async function POST(req:Request,{params}:{params:Promise<{id:string}>}){const auth=await manager(req);if(auth.error)return auth.error;const session=auth.session!;const id=Number((await params).id);if(!Number.isInteger(id)||id<=0)return NextResponse.json({error:'معرّف المستخدم غير صالح.'},{status:400});if(id===session.userId)return NextResponse.json({error:'لا يمكنك تعطيل حسابك.'},{status:400});const target=await query<{role:string;active:boolean}>('SELECT role,active FROM users WHERE id=$1',[id]);if(!target.length)return NextResponse.json({error:'الحساب غير موجود.'},{status:404});if(session.role==='general_manager'&&target[0].role==='admin')return NextResponse.json({error:'لا يمكن للمدير العام تعديل حساب المدير الأعلى.'},{status:403});const admins=await query<{n:number}>("SELECT COUNT(*)::int AS n FROM users WHERE role='admin' AND active=true");if(target[0].role==='admin'&&target[0].active&&Number(admins[0].n)<=1)return NextResponse.json({error:'لا يمكن تعطيل آخر حساب مدير.'},{status:400});await query('UPDATE users SET active=false,session_version=session_version+1 WHERE id=$1',[id]);await query("INSERT INTO audit_logs(user_id,entity_type,entity_id,action) VALUES($1,'user',$2,'deactivate')",[session.userId,String(id)]);return NextResponse.json({ok:true})}
+/** Change a staff role; role changes revoke all existing sessions. */
+export async function PATCH(req:Request,{params}:{params:Promise<{id:string}>}){const auth=await manager(req);if(auth.error)return auth.error;const session=auth.session!;const id=Number((await params).id);if(!Number.isInteger(id)||id<=0)return NextResponse.json({error:'معرّف المستخدم غير صالح.'},{status:400});if(id===session.userId)return NextResponse.json({error:'لا يمكنك تغيير دور حسابك من هذه الشاشة.'},{status:400});let body:unknown;try{body=await req.json()}catch{return NextResponse.json({error:'بيانات غير صالحة.'},{status:400})}const parsed=userRoleSchema.safeParse(body);if(!parsed.success)return NextResponse.json({error:'الدور غير صالح.'},{status:400});if(session.role==='general_manager'&&parsed.data.role==='admin')return NextResponse.json({error:'تعيين مدير أعلى متاح للمدير فقط.'},{status:403});const target=await query<{role:string;active:boolean}>('SELECT role,active FROM users WHERE id=$1',[id]);if(!target.length)return NextResponse.json({error:'الحساب غير موجود.'},{status:404});if(session.role==='general_manager'&&target[0].role==='admin')return NextResponse.json({error:'لا يمكن للمدير العام تعديل حساب المدير الأعلى.'},{status:403});if(target[0].active&&target[0].role==='admin'&&parsed.data.role!=='admin'){const admins=await query<{n:number}>("SELECT COUNT(*)::int AS n FROM users WHERE role='admin' AND active=true");if(Number(admins[0].n)<=1)return NextResponse.json({error:'لا يمكن تغيير دور آخر مدير نشط.'},{status:400})}await query('UPDATE users SET role=$1,session_version=session_version+1 WHERE id=$2',[parsed.data.role,id]);await query("INSERT INTO audit_logs(user_id,entity_type,entity_id,action,metadata) VALUES($1,'user',$2,'role_change',jsonb_build_object('role',$3::text))",[session.userId,String(id),parsed.data.role]);return NextResponse.json({ok:true})}

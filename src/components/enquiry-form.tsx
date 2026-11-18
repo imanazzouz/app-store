@@ -37,7 +37,7 @@ export default function EnquiryForm({ listingId, listingTitle }: Props) {
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
         setPhase('error');
-        setError(json.error || 'Something went wrong. Please try again.');
+        setError(json.error || 'حدث خطأ ما. يرجى المحاولة مجدداً.');
         return;
       }
       setName(String(data.get('name') ?? '').split(' ')[0]);
@@ -45,7 +45,7 @@ export default function EnquiryForm({ listingId, listingTitle }: Props) {
       form.reset();
     } catch {
       setPhase('error');
-      setError('Network error — please check your connection and try again.');
+      setError('تعذر الاتصال بالشبكة. تحقق من اتصالك وحاول مجدداً.');
     }
   }
 
@@ -55,14 +55,13 @@ export default function EnquiryForm({ listingId, listingTitle }: Props) {
         <div className="success-icon" aria-hidden="true">
           ✓
         </div>
-        <h3>Enquiry received</h3>
+        <h3>تم استلام استفسارك</h3>
         <p>
-          Thank you{name ? `, ${name}` : ''} — your enquiry for{' '}
+          شكراً لك{name ? `، ${name}` : ''} — وصل استفسارك حول{' '}
           <strong>{listingTitle}</strong> is with our leasing team.
         </p>
         <p className="success-note">
-          We’ll reply by email shortly with the full application pack. No
-          documents are needed at this stage.
+          سنتواصل معك قريباً عبر البريد الإلكتروني لمتابعة طلبك. لا حاجة إلى مستندات في هذه المرحلة.
         </p>
       </div>
     );
@@ -70,15 +69,14 @@ export default function EnquiryForm({ listingId, listingTitle }: Props) {
 
   return (
     <form className="enquiry-card" onSubmit={onSubmit} noValidate={false}>
-      <h3>Enquire about this unit</h3>
+      <h3>استفسر عن هذه الوحدة</h3>
       <p className="enquiry-lede">
-        Send a short note and we’ll follow up personally with the full
-        application pack. <strong>No file uploads required.</strong>
+        أرسل رسالة قصيرة وسيتواصل معك فريقنا لمتابعة الطلب. <strong>لا حاجة إلى رفع ملفات.</strong>
       </p>
 
       <div className="form-row">
         <label className="field">
-          <span>Your name *</span>
+          <span>الاسم *</span>
           <input
             type="text"
             name="name"
@@ -86,11 +84,11 @@ export default function EnquiryForm({ listingId, listingTitle }: Props) {
             minLength={2}
             maxLength={120}
             autoComplete="name"
-            placeholder="Amina Benali"
+            placeholder="أمينة بن علي"
           />
         </label>
         <label className="field">
-          <span>Email *</span>
+          <span>البريد الإلكتروني *</span>
           <input
             type="email"
             name="email"
@@ -103,7 +101,7 @@ export default function EnquiryForm({ listingId, listingTitle }: Props) {
       </div>
 
       <label className="field">
-        <span>Phone (optional)</span>
+        <span>الهاتف (اختياري)</span>
         <input
           type="tel"
           name="phone"
@@ -115,19 +113,19 @@ export default function EnquiryForm({ listingId, listingTitle }: Props) {
       </label>
 
       <label className="field">
-        <span>Message (optional)</span>
+        <span>الرسالة (اختياري)</span>
         <textarea
           name="message"
           rows={4}
           maxLength={2000}
-          placeholder="Tell us about your timing, intended use, or any questions…"
+          placeholder="أخبرنا عن موعد الانتقال أو طريقة استخدامك للعقار أو أي استفسار…"
         />
       </label>
 
       {/* Honeypot — hidden from humans, tempting for bots */}
       <div className="honeypot" aria-hidden="true">
         <label>
-          Company
+          الشركة
           <input type="text" name="company" tabIndex={-1} autoComplete="off" />
         </label>
       </div>
@@ -139,10 +137,10 @@ export default function EnquiryForm({ listingId, listingTitle }: Props) {
       )}
 
       <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={phase === 'sending'}>
-        {phase === 'sending' ? 'Sending…' : 'Send enquiry'}
+        {phase === 'sending' ? 'جارٍ الإرسال…' : 'إرسال الاستفسار'}
       </button>
       <p className="form-fineprint">
-        Your details are used only to respond to this enquiry.
+        تُستخدم بياناتك للرد على هذا الاستفسار فقط.
       </p>
     </form>
   );
